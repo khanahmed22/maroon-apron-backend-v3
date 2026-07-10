@@ -7,11 +7,11 @@ export const generateToken =(userId,res)=>{
   })
     console.log("Setting cookie...");
 
-  res.cookie("jwt", token,{
-    httpOnly: true,
-     secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-    maxAge: 1000*60*60*24*7  // 7days
-  })
+  res.cookie("jwt", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 1000 * 60 * 60 * 24 * 7, //7 days
+});
   return token
 }
