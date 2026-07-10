@@ -1,7 +1,6 @@
 import express from 'express'
 import prisma from './src/db.js'
 import authRouter from './src/routes/authRoute.js'
-import taskRouter from './src/routes/taskRoutes.js'
 import inventRouter from './src/routes/inventRoutes.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
