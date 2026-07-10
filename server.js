@@ -38,7 +38,7 @@ async function isAllowedOrigin(origin) {
     return true
   }
 
-  if (url.hostname.endsWith('.crimsoncastle.shop')) {
+  if (url.hostname.endsWith(process.env.CRIMSON_HOSTNAME)) {
     return true
   }
 
