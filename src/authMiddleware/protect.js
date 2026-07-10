@@ -1,0 +1,47 @@
+import jwt from "jsonwebtoken";
+import prisma from "../db.js";
+
+export const protect = async (req, res, next) => {
+  try {
+    const token = req.cookies?.jwt;
+
+    
+
+    if (!token) {
+      return res.status(401).json({
+        error: "Not Authorized",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    
+
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        error: "User not found",
+      });
+    }
+
+   
+
+    req.user = user;
+    
+    next();
+  } catch (err) {
+    console.log(err);
+    res.status(401).json({
+      error: "Invalid token",
+    });
+  }
+};

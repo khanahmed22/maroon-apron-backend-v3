@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User{
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  password String
+  createdAt DateTime? @default(now())
+  isVerified Boolean @default(false)
+  role String
+  subdomain String?
+  plan String @default("free")
+  merchant_verify Boolean @default(false)
+  subscription_id String?
+    paddleCustomerId    String?
+
+
+
+  merchantapp MerchantApps[]
+
+  inventory Inventory[]
+  resetTokens PasswordResetToken[]
+
+
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+
+
+
+model RestList{
+  id String @id @default(uuid()) 
+  userId String @unique
+  createdAt DateTime @default(now())
+  restName String
+  restPhone Int?
+  restEmail String?
+  restAddress String?
+  restLogo String?
+  restBanner String?
+  logoId String?
+  bannerId String?
+  subdomain String? @unique()
+  restSite String?
+  restInstagram String?
+  restFB String?
+  metaTitle String?
+  metaDesc String?
+  customDomain String? @unique()
+  inventories Inventory[] 
+  orders Orders[]
+
+
+}
+
+model Inventory {
+  id String @id @default(uuid())
+  name String
+  price Int
+  category String?
+  imageUrl String?
+  publicId String?
+  userId String
+  createdAt DateTime @default(now())
+  variants InventVariants[]
+  stockAmount Int @default(0)
+  restId String
+  restName String? 
+  restlist RestList @relation(fields: [restId],references: [id],onDelete: Cascade)
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+}
+
+model InventVariants {
+  id String @id @default(uuid())
+  variantName String 
+  variantPrice Int
+  createdAt DateTime @default(now())
+  inventoryId String
+  inventory Inventory @relation( fields: [inventoryId], references: [id],onDelete: Cascade)
+
+}
+
+model Orders {
+  id String @id @default(uuid())
+  orderNumber String @unique()
+  createdAt DateTime @default(now())
+  custName String
+  custEmail String
+  custPhone String
+  custAddress String
+  orderDetails Json?
+  recieveMethod String
+  status String @default("pending")
+  orderTotal Int
+  restId String  
+  restName String?
+  restlist RestList @relation(fields: [restId],references: [id],onDelete: Cascade)
+
+  
+
+
+}
+
+
+model MerchantApps{
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  userId String @unique()
+  email String @unique()
+  full_name String
+  phone String
+  business_name String
+  address String?
+  category String
+  description String
+  social_links String?
+  cnic String
+  status String @default("submitted")
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+
+
+}
+
+
+
+

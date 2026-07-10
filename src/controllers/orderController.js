@@ -1,0 +1,246 @@
+import prisma from "../db.js"
+import { Resend } from "resend"
+import { getIO } from "../utils/socket.js"
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+
+const viewOrder = async(req,res)=>{
+  const {restId} = req.params
+  try{
+    const vieworders = await prisma.orders.findMany({
+      where:{restId:restId},
+      orderBy:{
+        createdAt:'desc'
+      }
+    })
+
+    res.json(vieworders)
+  }
+  catch(err){
+    console.log(err)
+      res.status(500).json({ error: "Failed to fetch orders" });
+
+  }
+}
+
+
+
+
+
+
+
+const addOrder = async(req,res)=>{
+  const {custDetails,cart} = req.body
+
+  try{
+    const add = await prisma.orders.create({
+    data:{
+      orderNumber:custDetails.orderNumber,
+      custName: custDetails.custName,
+      custEmail:custDetails.custEmail,
+      custAddress:custDetails.custAddress,
+      custPhone:custDetails.custPhone,
+      recieveMethod: custDetails.recieveMethod,
+      createdAt: custDetails.createdAt,
+      orderDetails: cart,
+      restId: custDetails.restId,
+      orderTotal:custDetails.orderTotal,
+      restName:custDetails.restName
+    }
+  })
+  const io = getIO();
+
+io.to(add.restId).emit("newOrder", {
+  id: add.id,
+  orderNumber: add.orderNumber,
+  customer: add.custName,
+  total: add.orderTotal,
+  createdAt: add.createdAt,
+});
+  res.json({message:'order placed'})
+  const orderItems = cart
+  .map(
+    (item) => `
+      <tr>
+        <td style="padding:10px;border-bottom:1px solid #eee;">
+          <strong>${item.name}</strong>
+          ${item.variantName ? `<br><small>${item.variantName}</small>` : ""}
+        </td>
+        <td style="padding:10px;border-bottom:1px solid #eee;text-align:right;">
+          Rs. ${item.price}
+        </td>
+      </tr>
+    `
+  )
+  .join("");
+  await resend.emails.send({
+  from: "team@pizzatown.lol",
+  to: custDetails.custEmail,
+  subject: `Order Confirmation #${custDetails.orderNumber}`,
+  html: `
+  <div style="max-width:600px;margin:auto;font-family:Arial,sans-serif;background:#ffffff;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden;">
+
+    <div style="background:#dc2626;padding:24px;text-align:center;color:white;">
+      <h1 style="margin:0;">${custDetails.restName}</h1>
+      <p style="margin:8px 0 0;">Thank you for your order!</p>
+    </div>
+
+    <div style="padding:24px;">
+
+      <h2 style="margin-top:0;">Order Confirmed ✅</h2>
+
+      <p>Hi <strong>${custDetails.custName}</strong>, we've received your order.</p>
+
+      <p>
+        <strong>Order Number:</strong> ${custDetails.orderNumber}<br>
+        <strong>Receive Method:</strong> ${custDetails.recieveMethod}
+      </p>
+
+      <h3>Order Items</h3>
+
+      <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f5f5f5;">
+            <th align="left" style="padding:10px;">Item</th>
+            <th align="right" style="padding:10px;">Price</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${orderItems}
+        </tbody>
+
+        <tfoot>
+          <tr>
+            <td style="padding:14px;font-weight:bold;">
+              Total
+            </td>
+
+            <td style="padding:14px;text-align:right;font-weight:bold;">
+              Rs. ${custDetails.orderTotal}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      ${
+        custDetails.recieveMethod === "delivery"
+          ? `
+        <h3 style="margin-top:30px;">Delivery Address</h3>
+        <p>${custDetails.custAddress}</p>
+      `
+          : ""
+      }
+
+      <hr style="margin:30px 0;">
+
+      <p style="font-size:14px;color:#666;">
+        If you have any questions about your order, simply reply to this email.
+      </p>
+
+      <p style="margin-top:30px;">
+        Thank you for choosing <strong>${custDetails.restName}</strong> ❤️
+      </p>
+
+    </div>
+
+  </div>
+  `,
+});
+  
+  }
+  catch(err){
+    console.log(err)
+    res.json(err)
+  }
+  
+
+  
+}
+const updateOrder = async (req, res) => {
+  const { id, status } = req.body;
+
+  try {
+    // Get existing order
+    const order = await prisma.orders.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    // Update status
+    await prisma.orders.update({
+      where: {
+        id,
+      },
+      data: {
+        status,
+      },
+    });
+
+    // Send cancellation email
+    if (status === "cancelled") {
+      await resend.emails.send({
+        from: "team@pizzatown.lol",
+        to: order.custEmail,
+        subject: `Order #${order.orderNumber} Cancelled`,
+        html: `
+        <div style="max-width:600px;margin:auto;font-family:Arial,sans-serif;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden;">
+
+          <div style="background:#dc2626;color:white;padding:24px;text-align:center;">
+            <h1>${order.restName}</h1>
+          </div>
+
+          <div style="padding:24px;">
+
+            <h2>Order Cancelled</h2>
+
+            <p>Hi <strong>${order.custName}</strong>,</p>
+
+            <p>Unfortunately, your order has been <strong>cancelled</strong>.</p>
+
+            <p>
+              <strong>Order Number:</strong> ${order.orderNumber}
+            </p>
+
+            <p>
+              If you have already made a payment, any applicable refund will be processed according to our refund policy.
+            </p>
+
+            <p>
+              If you believe this cancellation was made in error, please contact us.
+            </p>
+
+            <hr>
+
+            <p>
+              Thank you,<br>
+              <strong>${order.restName}</strong>
+            </p>
+
+          </div>
+
+        </div>
+        `,
+      });
+    }
+
+    res.json({
+      message: "Order status updated",
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Failed to update order status",
+    });
+  }
+};
+
+export {viewOrder,addOrder,updateOrder}

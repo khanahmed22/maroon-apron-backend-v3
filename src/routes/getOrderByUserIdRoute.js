@@ -1,0 +1,43 @@
+import express,{Router} from "express";
+import { protect } from "../authMiddleware/protect.js";
+import prisma from "../db.js";
+const orderByUserIdRouter = Router({
+  mergeParams: true,
+})
+
+
+orderByUserIdRouter.get("/", protect, async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+
+    const restaurant = await prisma.restList.findUnique({
+      where: {
+        subdomain,
+      },
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({
+        error: "Restaurant not found",
+      });
+    }
+
+    const orders = await prisma.orders.findMany({
+      where: {
+        custEmail: req.user.email,
+        restId: restaurant.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.json(orders);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "Server error",err,
+    });
+  }
+});
+export  default orderByUserIdRouter
