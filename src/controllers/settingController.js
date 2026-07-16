@@ -11,7 +11,8 @@ const updateRestaurantSettings = async (req, res) => {
       restAddress,
       restLogo,
       restBanner,
-    customDomain,
+      restTheme,
+      customDomain,
       restInstagram,
       restFB,
       metaTitle,
@@ -61,7 +62,7 @@ const updateRestaurantSettings = async (req, res) => {
         restAddress,
         restLogo,
         restBanner,
-   
+        restTheme,
         restInstagram,
         restFB,
         metaTitle,

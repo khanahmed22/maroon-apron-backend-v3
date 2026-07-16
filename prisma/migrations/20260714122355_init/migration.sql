@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "AreaList" ALTER COLUMN "deliveryFee" SET DATA TYPE TEXT,
+ALTER COLUMN "minOrder" SET DATA TYPE TEXT;

@@ -1,9 +1,16 @@
 import prisma from "../db.js"
 import { Resend } from "resend"
 import { getIO } from "../utils/socket.js"
+import { redisClient } from "../../redis.js"
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-
+const invalidateInventoryCache = async (userId, restId) => {
+  const restaurant = await prisma.restList.findUnique({ where: { id: restId } });
+  await redisClient.del(`viewItemMerchant:${userId}`);
+  if (restaurant?.subdomain) {
+    await redisClient.del(`viewItemCustomer:${restaurant.subdomain}`);
+  }
+};
 const viewOrder = async(req,res)=>{
   const {restId} = req.params
   try{
@@ -45,7 +52,9 @@ const addOrder = async(req,res)=>{
       orderDetails: cart,
       restId: custDetails.restId,
       orderTotal:custDetails.orderTotal,
-      restName:custDetails.restName
+      restName:custDetails.restName,
+      deliveryArea:custDetails.deliveryArea,
+      deliveryFee:custDetails.deliveryFee
     }
   })
   const io = getIO();
@@ -184,6 +193,35 @@ const updateOrder = async (req, res) => {
       },
     });
 
+   if (status === "confirmed") {
+  const items =
+    typeof order.orderDetails === "string"
+      ? JSON.parse(order.orderDetails)
+      : order.orderDetails;
+
+  if (Array.isArray(items)) {
+    for (const item of items) {
+      await prisma.inventory.update({
+        where: {
+          id: item.dbId,
+        },
+        data: {
+          stockAmount: {
+            decrement: item.quantity,
+          },
+        },
+      });
+    }
+  }
+  try {
+  await invalidateInventoryCache(req.user.id, order.restId);
+} catch (err) {
+  console.error("Redis error:", err);
+}
+  
+}
+
+
     // Send cancellation email
     if (status === "cancelled") {
       await resend.emails.send({
@@ -235,12 +273,13 @@ const updateOrder = async (req, res) => {
       message: "Order status updated",
     });
   } catch (err) {
-    console.log(err);
+  console.error(err);
 
-    res.status(500).json({
-      message: "Failed to update order status",
-    });
-  }
+  return res.status(500).json({
+    message: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack : undefined,
+  });
+}
 };
 
 export {viewOrder,addOrder,updateOrder}

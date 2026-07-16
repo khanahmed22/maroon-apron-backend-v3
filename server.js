@@ -23,7 +23,8 @@ import resetPasswordRouter from './src/routes/resetPassword.js'
 import subRouter from './src/routes/subdomainRoute.js'
 import domainRouter from './src/routes/requestDomain.js'
 import { rateLimiter } from './src/redisLimitware/redisLimit.js'
-
+import deliveryRouter from './src/routes/deliveryZoneRoute.js'
+import analyticsRouter from './src/routes/analyticsRoute.js'
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
@@ -93,6 +94,9 @@ app.use('/settings', rateLimiter(50, 60), settingRouter)
 app.use('/order-placed', rateLimiter(20, 60), publicOrderRouter)
 app.use('/customers', rateLimiter(50, 60), custRouter)
 app.use('/paddle', rateLimiter(30, 60), accountRouter)
+app.use('/area-list',rateLimiter(100, 60),deliveryRouter)
+
+app.use('/analytics', rateLimiter(50, 60), analyticsRouter)
 
 
 app.use(

@@ -8,8 +8,28 @@ giveRestDetails.post("/",async(req,res)=>{
   const {subdomain} = req.body
   
   const getRest = await prisma.restList.findUnique({
-    where:{subdomain:subdomain}
-  }) 
+    where:{subdomain:subdomain},
+    select: {
+    id: true,
+    createdAt: true,
+    restName: true,
+    restPhone: true,
+    restEmail: true,
+    restAddress: true,
+    restLogo: true,
+    restBanner: true,
+    logoId: true,
+    bannerId: true,
+    subdomain: true,
+    restSite: true,
+    restInstagram: true,
+    restTheme:true,
+    restFB: true,
+    metaTitle: true,
+    metaDesc: true,
+    customDomain: true,
+    
+  }}) 
 
   if(!getRest){
     return res.json({error:'no restaurant found'})
@@ -25,7 +45,27 @@ giveRestDetails.get("/merchant",protect,async(req,res)=>{
   const userId = req.user.id
   
   const getRest = await prisma.restList.findUnique({
-    where:{userId:userId}
+    where:{userId:userId},
+    select: {
+    id: true,
+    createdAt: true,
+    restName: true,
+    restPhone: true,
+    restEmail: true,
+    restAddress: true,
+    restLogo: true,
+    restBanner: true,
+    logoId: true,
+    bannerId: true,
+    subdomain: true,
+    restSite: true,
+    restInstagram: true,
+    restTheme:true,
+    restFB: true,
+    metaTitle: true,
+    metaDesc: true,
+    customDomain: true,
+  },
   }) 
 
   if(!getRest){

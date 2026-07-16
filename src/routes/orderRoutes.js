@@ -9,6 +9,6 @@ orderRouter.get('/:restId',viewOrder)
 
 orderRouter.post('/',addOrder)
 
-orderRouter.put('/',updateOrder)
+orderRouter.put('/',protect,updateOrder)
 
 export default orderRouter

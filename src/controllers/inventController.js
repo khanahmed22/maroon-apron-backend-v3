@@ -1,12 +1,25 @@
 import prisma from "../db.js"
-import {z} from 'zod'
+import {positive, z} from 'zod'
 import cloudinary from "../../config/cloudinary.js"
 import { redisClient } from "../../redis.js"
+
+//cache invalidator
+
+const invalidateInventoryCache = async (userId, restId) => {
+  const restaurant = await prisma.restList.findUnique({ where: { id: restId } });
+  await redisClient.del(`viewItemMerchant:${userId}`);
+  if (restaurant?.subdomain) {
+    await redisClient.del(`viewItemCustomer:${restaurant.subdomain}`);
+  }
+};
+
+
 //add item
 
 const addItemSchema = z.object({
   name: z.string().min(3),
   price: z.number().positive(),
+  costPrice: z.string(),
   imageUrl: z.string().optional(),
   restId: z.string(),
   stockAmount: z.number().int().nonnegative(),
@@ -22,8 +35,10 @@ const addItemSchema = z.object({
     .optional(),
 });
 
+//add item
+
 const addItem =async(req,res)=>{
-  const {name,price,variants,imageUrl, publicId,restId,restName,category,stockAmount} = req.body
+  const {name,price,variants,imageUrl, publicId,restId,restName,category,stockAmount,costPrice} = addItemSchema.parse(req.body)
 
   try{
     const addItem = await prisma.inventory.create({
@@ -31,6 +46,7 @@ const addItem =async(req,res)=>{
       name,
       price,
       category,
+      costPrice,
       userId: req.user.id,
       
       variants:{
@@ -40,7 +56,8 @@ const addItem =async(req,res)=>{
       publicId,
       restId,
       restName,
-      stockAmount
+      stockAmount,
+   
 
     },
     include: {
@@ -48,6 +65,8 @@ const addItem =async(req,res)=>{
     }
 
   })
+
+  await invalidateInventoryCache(req.user.id, restId)
 
   res.json({status: 201,message: 'item added successfully'})
   }
@@ -203,6 +222,8 @@ const deleteItem = async(req,res)=>{
     if (item.imageUrl && item.publicId) {
       await cloudinary.uploader.destroy(item.publicId);
     }
+
+    await invalidateInventoryCache(req.user.id, item.restId)
    res.json({
     status: 'success',message:'item deleted'
   })
@@ -223,7 +244,7 @@ const deleteItem = async(req,res)=>{
 // update item
 
 const updateItem = async (req, res) => {
-  const { id, name, price, imageUrl, publicId, variants,restId,restName,category,stockAmount } = req.body;
+  const { id, name, price, imageUrl, publicId, variants,restId,restName,category,stockAmount,costPrice } = req.body;
   try {
     // 1. get existing item
     const existingItem = await prisma.inventory.findUnique({
@@ -246,6 +267,7 @@ const updateItem = async (req, res) => {
         restId,
         restName,
         stockAmount,
+        costPrice,
         ...(imageUrl && { imageUrl }),
         ...(publicId && { publicId }),
         ...(variants && {
@@ -260,6 +282,7 @@ const updateItem = async (req, res) => {
       },
       include: { variants: true },
     });
+    await invalidateInventoryCache(req.user.id, updated.restId)
     res.json({
       status: "success",
       message: "item updated",

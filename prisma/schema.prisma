@@ -24,6 +24,7 @@ model User{
   merchant_verify Boolean @default(false)
   subscription_id String?
     paddleCustomerId    String?
+  
 
 
 
@@ -31,6 +32,7 @@ model User{
 
   inventory Inventory[]
   resetTokens PasswordResetToken[]
+  areaList AreaList[]
 
 
 }
@@ -63,6 +65,7 @@ model RestList{
   bannerId String?
   subdomain String? @unique()
   restSite String?
+  restTheme String @default("red")
   restInstagram String?
   restFB String?
   metaTitle String?
@@ -86,6 +89,7 @@ model Inventory {
   variants InventVariants[]
   stockAmount Int @default(0)
   restId String
+  costPrice String?
   restName String? 
   restlist RestList @relation(fields: [restId],references: [id],onDelete: Cascade)
   user User @relation(fields: [userId],references: [id],onDelete: Cascade)
@@ -115,6 +119,8 @@ model Orders {
   orderTotal Int
   restId String  
   restName String?
+  deliveryArea String?
+  deliveryFee String?
   restlist RestList @relation(fields: [restId],references: [id],onDelete: Cascade)
 
   
@@ -138,6 +144,22 @@ model MerchantApps{
   cnic String
   status String @default("submitted")
   user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+
+
+}
+
+model AreaList {
+  id String @id @default(uuid())
+  userId String
+  restId String
+  areaId String @unique() @default(uuid())
+  areaName String 
+  cityName String
+  minOrder String
+  deliveryFee String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
+
 
 
 }
