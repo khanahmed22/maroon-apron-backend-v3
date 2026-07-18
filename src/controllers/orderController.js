@@ -30,33 +30,51 @@ const viewOrder = async(req,res)=>{
   }
 }
 
-
-
-
-
-
-
 const addOrder = async(req,res)=>{
-  const {custDetails,cart} = req.body
+  // `coupon` is the { couponId, code, discount } object the checkout
+  // pages send when a coupon was applied — null/undefined otherwise.
+  const {custDetails,cart,coupon} = req.body
 
   try{
-    const add = await prisma.orders.create({
-    data:{
-      orderNumber:custDetails.orderNumber,
-      custName: custDetails.custName,
-      custEmail:custDetails.custEmail,
-      custAddress:custDetails.custAddress,
-      custPhone:custDetails.custPhone,
-      recieveMethod: custDetails.recieveMethod,
-      createdAt: custDetails.createdAt,
-      orderDetails: cart,
-      restId: custDetails.restId,
-      orderTotal:custDetails.orderTotal,
-      restName:custDetails.restName,
-      deliveryArea:custDetails.deliveryArea,
-      deliveryFee:custDetails.deliveryFee
-    }
-  })
+    // Order creation + coupon redemption happen in one transaction: if
+    // either write fails, both roll back, so a coupon can never end up
+    // marked "used" for an order that didn't actually save.
+    const [add] = await prisma.$transaction([
+      prisma.orders.create({
+        data:{
+          orderNumber:custDetails.orderNumber,
+          custName: custDetails.custName,
+          custEmail:custDetails.custEmail,
+          custAddress:custDetails.custAddress,
+          custPhone:custDetails.custPhone,
+          recieveMethod: custDetails.recieveMethod,
+          createdAt: custDetails.createdAt,
+          orderDetails: cart,
+          restId: custDetails.restId,
+          orderTotal:custDetails.orderTotal,
+          restName:custDetails.restName,
+          deliveryArea:custDetails.deliveryArea,
+          deliveryFee:custDetails.deliveryFee,
+          // requires the couponId/couponCode/discountAmount columns
+          // added to Orders in the earlier schema change
+          couponId: coupon?.couponId ?? null,
+          couponCode: coupon?.code ?? null,
+          discountAmount: coupon?.discount ?? 0,
+        }
+      }),
+      ...(coupon?.couponId
+        ? [
+            prisma.couponUsage.create({
+              data: { couponId: coupon.couponId, userId: custDetails.custEmail },
+            }),
+            prisma.coupon.update({
+              where: { id: coupon.couponId },
+              data: { usedCount: { increment: 1 } },
+            }),
+          ]
+        : []),
+    ])
+
   const io = getIO();
 
 io.to(add.restId).emit("newOrder", {
@@ -120,6 +138,20 @@ io.to(add.restId).emit("newOrder", {
         </tbody>
 
         <tfoot>
+          ${
+            coupon?.discount
+              ? `
+          <tr>
+            <td style="padding:10px;text-align:right;color:#16a34a;">
+              Discount (${coupon.code})
+            </td>
+            <td style="padding:10px;text-align:right;color:#16a34a;">
+              - Rs. ${coupon.discount}
+            </td>
+          </tr>
+          `
+              : ""
+          }
           <tr>
             <td style="padding:14px;font-weight:bold;">
               Total

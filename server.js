@@ -25,6 +25,7 @@ import domainRouter from './src/routes/requestDomain.js'
 import { rateLimiter } from './src/redisLimitware/redisLimit.js'
 import deliveryRouter from './src/routes/deliveryZoneRoute.js'
 import analyticsRouter from './src/routes/analyticsRoute.js'
+import couponRouter from './src/routes/couponRoute.js'
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
@@ -97,6 +98,7 @@ app.use('/paddle', rateLimiter(30, 60), accountRouter)
 app.use('/area-list',rateLimiter(100, 60),deliveryRouter)
 
 app.use('/analytics', rateLimiter(50, 60), analyticsRouter)
+app.use("/coupons", rateLimiter(80, 60),couponRouter);
 
 
 app.use(
