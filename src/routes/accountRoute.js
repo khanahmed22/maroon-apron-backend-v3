@@ -17,6 +17,7 @@ accountRouter.get("/account", protect, async (req, res) => {
         merchant_verify: true,
         plan: true,
         subscription_id: true,
+        
       },
 
     });
