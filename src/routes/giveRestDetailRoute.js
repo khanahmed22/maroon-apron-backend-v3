@@ -29,6 +29,11 @@ giveRestDetails.post("/",async(req,res)=>{
     metaTitle: true,
     metaDesc: true,
     customDomain: true,
+    preOrdersEnabled:true,
+    preoOrderMinHours: true,
+    preOrderMaxDays:true,
+    pickUpWindows:true,
+    deliveryWindows:true
     
   }}) 
 

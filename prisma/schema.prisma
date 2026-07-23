@@ -72,6 +72,11 @@ model RestList{
   metaTitle String?
   metaDesc String?
   customDomain String? @unique()
+  preOrdersEnabled Boolean?
+  preoOrderMinHours Int?
+  preOrderMaxDays Int?
+  pickUpWindows String[] 
+  deliveryWindows String[] 
   inventories Inventory[] 
   orders Orders[]
   coupons Coupon[]
@@ -83,6 +88,7 @@ model Inventory {
   id String @id @default(uuid())
   name String
   price Int
+  description String?
   category String?
   imageUrl String?
   publicId String?
@@ -194,6 +200,9 @@ model Orders {
   couponId       String?
   couponCode     String?
   discountAmount Int      @default(0)
+  isPreOrder Boolean?
+  scheduledDate DateTime?
+  scheduledWindow String?
   coupon         Coupon?  @relation(fields: [couponId], references: [id], onDelete: SetNull)
 
   

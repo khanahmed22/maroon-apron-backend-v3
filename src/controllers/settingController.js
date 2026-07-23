@@ -20,6 +20,11 @@ const updateRestaurantSettings = async (req, res) => {
       metaDesc,
       logoId,
       bannerId,
+      preOrdersEnabled,
+      preoOrderMinHours,
+      preOrderMaxDays,
+      pickUpWindows,
+      deliveryWindows,
     } = req.body;
 
     // Get existing restaurant
@@ -71,7 +76,12 @@ const updateRestaurantSettings = async (req, res) => {
         metaDesc,
         logoId,
         bannerId,
-        customDomain
+        customDomain,
+        preOrdersEnabled,
+        preoOrderMinHours,
+        preOrderMaxDays,
+        pickUpWindows,
+        deliveryWindows,
       },
     });
 

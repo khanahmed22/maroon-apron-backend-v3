@@ -31,14 +31,11 @@ const viewOrder = async(req,res)=>{
 }
 
 const addOrder = async(req,res)=>{
-  // `coupon` is the { couponId, code, discount } object the checkout
-  // pages send when a coupon was applied — null/undefined otherwise.
+  
   const {custDetails,cart,coupon} = req.body
 
   try{
-    // Order creation + coupon redemption happen in one transaction: if
-    // either write fails, both roll back, so a coupon can never end up
-    // marked "used" for an order that didn't actually save.
+   
     const [add] = await prisma.$transaction([
       prisma.orders.create({
         data:{
@@ -55,11 +52,13 @@ const addOrder = async(req,res)=>{
           restName:custDetails.restName,
           deliveryArea:custDetails.deliveryArea,
           deliveryFee:custDetails.deliveryFee,
-          // requires the couponId/couponCode/discountAmount columns
-          // added to Orders in the earlier schema change
+          
           couponId: coupon?.couponId ?? null,
           couponCode: coupon?.code ?? null,
           discountAmount: coupon?.discount ?? 0,
+          isPreOrder:custDetails.isPreOrder,
+          scheduledDate: new Date(custDetails.scheduledDate),
+          scheduledWindow: (custDetails.scheduledWindow),
         }
       }),
       ...(coupon?.couponId

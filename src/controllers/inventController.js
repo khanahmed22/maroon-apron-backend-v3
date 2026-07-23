@@ -25,6 +25,7 @@ const addItemSchema = z.object({
   stockAmount: z.number().int().nonnegative(),
   restName: z.string(),
   category: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   variants: z
     .array(
       z.object({
@@ -38,7 +39,7 @@ const addItemSchema = z.object({
 //add item
 
 const addItem =async(req,res)=>{
-  const {name,price,variants,imageUrl, publicId,restId,restName,category,stockAmount,costPrice} = addItemSchema.parse(req.body)
+  const {name,price,variants,imageUrl, publicId,restId,restName,category,stockAmount,costPrice,description} = addItemSchema.parse(req.body)
 
   try{
     const addItem = await prisma.inventory.create({
@@ -47,6 +48,7 @@ const addItem =async(req,res)=>{
       price,
       category,
       costPrice,
+      description,
       userId: req.user.id,
       
       variants:{
@@ -244,7 +246,7 @@ const deleteItem = async(req,res)=>{
 // update item
 
 const updateItem = async (req, res) => {
-  const { id, name, price, imageUrl, publicId, variants,restId,restName,category,stockAmount,costPrice } = req.body;
+  const { id, name, price, imageUrl, publicId, variants,restId,restName,category,stockAmount,costPrice,description } = req.body;
   try {
     // 1. get existing item
     const existingItem = await prisma.inventory.findUnique({
@@ -263,6 +265,7 @@ const updateItem = async (req, res) => {
       data: {
         name,
         price,
+        description,
         category,
         restId,
         restName,
