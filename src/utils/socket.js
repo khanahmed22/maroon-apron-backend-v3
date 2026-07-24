@@ -25,7 +25,7 @@ export function initSocket(server) {
           }
 
           // Production Crimson Castle subdomains
-          if (url.hostname.endsWith(".crimsoncastle.shop")) {
+          if (url.hostname.endsWith(process.env.CRIMSON_HOSTNAME)) {
             return callback(null, true);
           }
 
