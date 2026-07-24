@@ -68,6 +68,25 @@ app.use(
   })
 )
 
+app.use(
+  cors({
+    origin: async (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      try {
+        const allowed = await isAllowedOrigin(origin);
+        callback(null, allowed);
+      } catch (err) {
+        console.error("CORS error:", err);
+        callback(err);
+      }
+    },
+    credentials: true,
+  })
+);
+
+app.options(/.*/, cors());
+
 const server = http.createServer(app)
 initSocket(server)
 
@@ -77,7 +96,10 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-
+app.use((req, res, next) => {
+  console.log(req.method, req.path, req.headers.origin);
+  next();
+});
 
 // Uploads
 app.use('/assets', rateLimiter(100, 60), imageUploadRouter)
