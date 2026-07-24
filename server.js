@@ -29,41 +29,28 @@ import couponRouter from './src/routes/couponRoute.js'
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
-  try {
-    console.log("Checking origin:", origin);
+  const url = new URL(origin)
 
-    const url = new URL(origin);
+  if (origin === process.env.CRIMSON_ADMIN_URL) return true
 
-    console.log("Hostname:", url.hostname);
-    console.log("Expected:", process.env.CRIMSON_HOSTNAME);
-
-    if (origin === process.env.CRIMSON_ADMIN_URL) return true;
-
-    if (
-      url.hostname.endsWith(".localhost") &&
-      url.port === "3001"
-    ) {
-      return true;
-    }
-
-    if (
-      process.env.CRIMSON_HOSTNAME &&
-      url.hostname.endsWith(process.env.CRIMSON_HOSTNAME)
-    ) {
-      return true;
-    }
-
-    const merchant = await prisma.restList.findFirst({
-      where: {
-        customDomain: url.hostname,
-      },
-    });
-
-    return !!merchant;
-  } catch (err) {
-    console.error(err);
-    return false;
+  if (
+    url.hostname.endsWith('.localhost') &&
+    url.port === '3001'
+  ) {
+    return true
   }
+
+  if (url.hostname.endsWith(".crimsoncastle.shop")) {
+    return true
+  }
+
+  const merchant = await prisma.restList.findFirst({
+    where: {
+      customDomain: url.hostname,
+    },
+  })
+
+  return !!merchant
 }
 
 const app = express()
@@ -80,25 +67,6 @@ app.use(
     credentials: true,
   })
 )
-//////////////////////
-app.use(
-  cors({
-    origin: async (origin, callback) => {
-      if (!origin) return callback(null, true);
-
-      try {
-        const allowed = await isAllowedOrigin(origin);
-        callback(null, allowed);
-      } catch (err) {
-        console.error("CORS error:", err);
-        callback(err);
-      }
-    },
-    credentials: true,
-  })
-);
-
-app.options(/.*/, cors());
 
 const server = http.createServer(app)
 initSocket(server)
@@ -109,10 +77,7 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-app.use((req, res, next) => {
-  console.log(req.method, req.path, req.headers.origin);
-  next();
-});
+
 
 // Uploads
 app.use('/assets', rateLimiter(100, 60), imageUploadRouter)
@@ -161,15 +126,6 @@ app.use(
   rateLimiter(10, 60),
   domainRouter
 )
-
-app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-
-  res.status(500).json({
-    error: err.message,
-    stack: err.stack,
-  });
-});
 
 server.listen(3000, () => {
   console.log('Server running')
