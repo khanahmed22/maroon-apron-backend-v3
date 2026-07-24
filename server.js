@@ -29,28 +29,41 @@ import couponRouter from './src/routes/couponRoute.js'
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
-  const url = new URL(origin)
+  try {
+    console.log("Checking origin:", origin);
 
-  if (origin === process.env.CRIMSON_ADMIN_URL) return true
+    const url = new URL(origin);
 
-  if (
-    url.hostname.endsWith('.localhost') &&
-    url.port === '3001'
-  ) {
-    return true
+    console.log("Hostname:", url.hostname);
+    console.log("Expected:", process.env.CRIMSON_HOSTNAME);
+
+    if (origin === process.env.CRIMSON_ADMIN_URL) return true;
+
+    if (
+      url.hostname.endsWith(".localhost") &&
+      url.port === "3001"
+    ) {
+      return true;
+    }
+
+    if (
+      process.env.CRIMSON_HOSTNAME &&
+      url.hostname.endsWith(process.env.CRIMSON_HOSTNAME)
+    ) {
+      return true;
+    }
+
+    const merchant = await prisma.restList.findFirst({
+      where: {
+        customDomain: url.hostname,
+      },
+    });
+
+    return !!merchant;
+  } catch (err) {
+    console.error(err);
+    return false;
   }
-
-  if (url.hostname.endsWith(process.env.CRIMSON_HOSTNAME)) {
-    return true
-  }
-
-  const merchant = await prisma.restList.findFirst({
-    where: {
-      customDomain: url.hostname,
-    },
-  })
-
-  return !!merchant
 }
 
 const app = express()
@@ -67,7 +80,7 @@ app.use(
     credentials: true,
   })
 )
-
+//////////////////////
 app.use(
   cors({
     origin: async (origin, callback) => {
@@ -148,6 +161,15 @@ app.use(
   rateLimiter(10, 60),
   domainRouter
 )
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+
+  res.status(500).json({
+    error: err.message,
+    stack: err.stack,
+  });
+});
 
 server.listen(3000, () => {
   console.log('Server running')
