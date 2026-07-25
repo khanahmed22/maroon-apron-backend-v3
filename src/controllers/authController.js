@@ -75,7 +75,7 @@ const registerMerchant =async (req,res)=>{
   const verificationUrl = `${process.env.CRIMSON_ADMIN_URL}/verify-email/${role}/${verifToken}`;
 
   await resend.emails.send({
-  from: "team@pizzatown.lol",
+  from: "no-reply@crimsoncastle.shop",
   to: user.email,
   subject: "Verify your email",
   html: `
@@ -137,7 +137,7 @@ const register =async (req,res)=>{
   const verificationUrl = `http://${subdomain}.${process.env.CRIMSON_NEXT_URL}/verify-email/${role}/${verifToken}`;
 
   await resend.emails.send({
-  from: "team@pizzatown.lol",
+  from: "no-reply@crimsoncastle.shop",
   to: user.email,
   subject: "Verify your email",
   html: `

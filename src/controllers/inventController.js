@@ -18,7 +18,7 @@ const invalidateInventoryCache = async (userId, restId) => {
 
 const addItemSchema = z.object({
   name: z.string().min(3),
-  price: z.number().positive(),
+  price: z.number().min(0).default(0),
   costPrice: z.string(),
   imageUrl: z.string().optional(),
   restId: z.string(),

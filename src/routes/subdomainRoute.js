@@ -5,7 +5,7 @@ const subRouter = Router();
 
 subRouter.get("/", async (req, res) => {
   try {
-    // Prefer the original host forwarded by Next.js.
+   
     const forwardedHost = req.headers["x-forwarded-host"];
 
     const host =
@@ -22,18 +22,17 @@ subRouter.get("/", async (req, res) => {
 
     let identifier = host;
 
-    // localhost => pizzatown
+    
     if (host.endsWith(".localhost")) {
       identifier = host.split(".")[0];
     }
 
-    // pizzatown.crimsoncastle.shop => pizzatown
+   
     else if (host.endsWith(".crimsoncastle.shop")) {
       identifier = host.split(".")[0];
     }
 
-    // For custom domains (burgerhouse.pk, shop.burgerhouse.com),
-    // identifier stays as the full hostname.
+    
 
     const restaurant = await prisma.restList.findFirst({
       where: {

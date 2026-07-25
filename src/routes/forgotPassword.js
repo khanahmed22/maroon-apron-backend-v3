@@ -57,9 +57,9 @@ forgotPasswordRouter.post("/merchant", async (req, res) => {
     const verificationUrl = `${process.env.CRIMSON_ADMIN_URL}/reset-password/${token}`;
 
     await resend.emails.send({
-      from: "PizzaTown <team@pizzatown.lol>",
+      from: "no-reply@crimsoncastle.shop",
       to: user.email,
-      subject: "Reset your PizzaTown password",
+      subject: "Reset your password",
       html: `
         <div style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
           
@@ -72,7 +72,7 @@ forgotPasswordRouter.post("/merchant", async (req, res) => {
           </p>
 
           <p>
-            We received a request to reset the password for your PizzaTown account.
+            We received a request to reset the password for your account.
           </p>
 
           <p>
@@ -185,9 +185,9 @@ forgotPasswordRouter.post("/customer", async (req, res) => {
     const verificationUrl = `http://${subdomain}.${process.env.CRIMSON_NEXT_URL}/reset-password/${token}`;
 
     await resend.emails.send({
-      from: "PizzaTown <team@pizzatown.lol>",
+      from: "no-reply@crimsoncastle.shop",
       to: user.email,
-      subject: "Reset your PizzaTown password",
+      subject: "Reset your password",
       html: `
         <div style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
           
@@ -200,7 +200,7 @@ forgotPasswordRouter.post("/customer", async (req, res) => {
           </p>
 
           <p>
-            We received a request to reset the password for your PizzaTown account.
+            We received a request to reset the password for your account.
           </p>
 
           <p>

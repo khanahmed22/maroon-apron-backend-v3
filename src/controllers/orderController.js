@@ -100,7 +100,7 @@ io.to(add.restId).emit("newOrder", {
   )
   .join("");
   await resend.emails.send({
-  from: "team@pizzatown.lol",
+  from: "orders@crimsoncastle.shop",
   to: custDetails.custEmail,
   subject: `Order Confirmation #${custDetails.orderNumber}`,
   html: `
@@ -256,7 +256,7 @@ const updateOrder = async (req, res) => {
     // Send cancellation email
     if (status === "cancelled") {
       await resend.emails.send({
-        from: "team@pizzatown.lol",
+        from: "orders@crimsoncastle.shop",
         to: order.custEmail,
         subject: `Order #${order.orderNumber} Cancelled`,
         html: `
