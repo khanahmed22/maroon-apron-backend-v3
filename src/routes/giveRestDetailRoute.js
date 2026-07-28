@@ -33,7 +33,9 @@ giveRestDetails.post("/",async(req,res)=>{
     preoOrderMinHours: true,
     preOrderMaxDays:true,
     pickUpWindows:true,
-    deliveryWindows:true
+    deliveryWindows:true,
+    lat:true,
+    long:true
     
   }}) 
 
@@ -72,6 +74,13 @@ giveRestDetails.get("/merchant",protect,async(req,res)=>{
     metaTitle: true,
     metaDesc: true,
     customDomain: true,
+    preOrdersEnabled:true,
+    preoOrderMinHours: true,
+    preOrderMaxDays:true,
+    pickUpWindows:true,
+    deliveryWindows:true,
+    lat:true,
+    long:true
   },
   }) 
 

@@ -31,6 +31,7 @@ const addItemSchema = z.object({
       z.object({
         variantName: z.string().min(1),
         variantPrice: z.number().nonnegative(),
+        variantCostPrice:z.number().nonnegative()
       })
     )
     .optional(),
@@ -279,6 +280,7 @@ const updateItem = async (req, res) => {
             create: variants.map((v) => ({
               variantName: v.variantName,
               variantPrice: v.variantPrice,
+              variantCostPrice:v.variantCostPrice
             })),
           },
         }),

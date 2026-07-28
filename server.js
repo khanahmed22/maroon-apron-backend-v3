@@ -26,6 +26,7 @@ import { rateLimiter } from './src/redisLimitware/redisLimit.js'
 import deliveryRouter from './src/routes/deliveryZoneRoute.js'
 import analyticsRouter from './src/routes/analyticsRoute.js'
 import couponRouter from './src/routes/couponRoute.js'
+import fixRouter from './src/routes/fixRateRoute.js'
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
@@ -126,6 +127,15 @@ app.use(
   rateLimiter(10, 60),
   domainRouter
 )
+
+
+
+app.use(
+  '/fix-rate',
+  rateLimiter(200, 60),
+  fixRouter
+)
+
 
 server.listen(3000, () => {
   console.log('Server running')

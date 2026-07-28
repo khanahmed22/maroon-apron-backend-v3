@@ -25,6 +25,8 @@ const updateRestaurantSettings = async (req, res) => {
       preOrderMaxDays,
       pickUpWindows,
       deliveryWindows,
+      lat,
+      long,
     } = req.body;
 
     // Get existing restaurant
@@ -82,6 +84,8 @@ const updateRestaurantSettings = async (req, res) => {
         preOrderMaxDays,
         pickUpWindows,
         deliveryWindows,
+        lat,
+        long,
       },
     });
 

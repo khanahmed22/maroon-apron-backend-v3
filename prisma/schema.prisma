@@ -23,7 +23,7 @@ model User{
   plan String @default("free")
   merchant_verify Boolean @default(false)
   subscription_id String?
-    paddleCustomerId    String?
+  paddleCustomerId    String?
   
 
 
@@ -33,6 +33,7 @@ model User{
   inventory Inventory[]
   resetTokens PasswordResetToken[]
   areaList AreaList[]
+  fixedRate FixedRate[]
 
 
 }
@@ -77,6 +78,8 @@ model RestList{
   preOrderMaxDays Int?
   pickUpWindows String[] 
   deliveryWindows String[] 
+  lat Float?
+  long Float?
   inventories Inventory[] 
   orders Orders[]
   coupons Coupon[]
@@ -107,6 +110,7 @@ model InventVariants {
   id String @id @default(uuid())
   variantName String 
   variantPrice Int
+  variantCostPrice Int?
   createdAt DateTime @default(now())
   inventoryId String
   inventory Inventory @relation( fields: [inventoryId], references: [id],onDelete: Cascade)
@@ -207,6 +211,19 @@ model Orders {
 
   
 
+
+}
+
+model FixedRate {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  rate Int
+  userId String @unique()
+  restId String @unique()
+  fixMode Boolean
+  FixMinOrder Int?
+
+  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
 
 }
 
