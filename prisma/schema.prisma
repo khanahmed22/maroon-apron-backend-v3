@@ -80,6 +80,7 @@ model RestList{
   deliveryWindows String[] 
   lat Float?
   long Float?
+  crimsonBranding Boolean @default(true)
   inventories Inventory[] 
   orders Orders[]
   coupons Coupon[]

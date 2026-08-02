@@ -5,7 +5,6 @@ import inventRouter from './src/routes/inventRoutes.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import dotenv from 'dotenv'
-import { Resend } from 'resend'
 import imageUploadRouter from './src/routes/uploadRoute.js'
 import orderRouter from './src/routes/orderRoutes.js'
 import restIdRouter from './src/routes/restIdRoute.js'
@@ -72,7 +71,6 @@ app.use(
 const server = http.createServer(app)
 initSocket(server)
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 app.use(cookieParser())
 app.use(express.json())

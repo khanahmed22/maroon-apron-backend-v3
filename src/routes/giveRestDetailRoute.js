@@ -35,7 +35,8 @@ giveRestDetails.post("/",async(req,res)=>{
     pickUpWindows:true,
     deliveryWindows:true,
     lat:true,
-    long:true
+    long:true,
+    crimsonBranding:true
     
   }}) 
 
@@ -80,7 +81,8 @@ giveRestDetails.get("/merchant",protect,async(req,res)=>{
     pickUpWindows:true,
     deliveryWindows:true,
     lat:true,
-    long:true
+    long:true,
+    crimsonBranding:true
   },
   }) 
 

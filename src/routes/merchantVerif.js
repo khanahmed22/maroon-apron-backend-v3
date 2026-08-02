@@ -1,7 +1,8 @@
 import express,{Router} from 'express'
 import prisma from "../db.js";
 import { protect } from '../authMiddleware/protect.js';
-
+import { Resend } from 'resend';
+const resend = new Resend(process.env.RESEND_API_KEY)
 const merchantVerifRouter = Router()
 merchantVerifRouter.post("/",protect, async (req, res) => {
 
@@ -53,10 +54,33 @@ merchantVerifRouter.post("/",protect, async (req, res) => {
     }
   })
 
-  res.json({success:'application submitted'})
+  await resend.emails.send({
+  from: "no-reply@crimsoncastle.shop",
+  to: process.env.ADMIN_EMAIL,
+  subject: "Merchant Application",
+  html: `
+   <h2>New Merchant Application</h2>
+
+<p><strong>Name:</strong> ${full_name}</p>
+<p><strong>Email:</strong> ${email}</p>
+<p><strong>Phone:</strong> ${phone}</p>
+<p><strong>Business:</strong> ${business_name}</p>
+<p><strong>Category:</strong> ${category}</p>
+<p><strong>Address:</strong> ${address}</p>
+<p><strong>Description:</strong> ${description}</p>
+<p><strong>Social:</strong> ${social_links ?? "N/A"}</p>
+<p><strong>CNIC:</strong> ${cnic}</p>
+
+    
+  `,
+
+});
+  
+
+  return res.json({success:'application submitted'})
   }   
   catch(err){
-    return res.json({error:'unable to submit application',err})
+    return res.json({error:'unable to submit application'})
   }
 
   
@@ -72,7 +96,7 @@ merchantVerifRouter.get('/submitted-application',protect,async(req,res)=>{
     select:{status:true}
   })
 
-  res.json(checkSubmission)
+  return res.json(checkSubmission)
   }
   catch(err){
     return res.json({error:'application not found'})

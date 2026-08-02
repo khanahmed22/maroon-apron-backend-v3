@@ -1,5 +1,5 @@
 import prisma from "../db.js"
-import {positive, z} from 'zod'
+import { z} from 'zod'
 import cloudinary from "../../config/cloudinary.js"
 import { redisClient } from "../../redis.js"
 
@@ -13,6 +13,29 @@ const invalidateInventoryCache = async (userId, restId) => {
   }
 };
 
+//inventory limit checker 
+
+const InventLimitChecker = async (userId, currentItems) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      plan: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.plan === "free" && currentItems >= 5) {
+    throw new Error("Only 5 items allowed in the free plan");
+  }
+
+  if (user.plan === "pro" && currentItems >= 100) {
+    throw new Error("Only 100 items allowed in the pro plan");
+  }
+};
+
 
 //add item
 
@@ -22,6 +45,7 @@ const addItemSchema = z.object({
   costPrice: z.string(),
   imageUrl: z.string().optional(),
   restId: z.string(),
+   publicId:z.string(),
   stockAmount: z.number().int().nonnegative(),
   restName: z.string(),
   category: z.string().nullable().optional(),
@@ -39,50 +63,75 @@ const addItemSchema = z.object({
 
 //add item
 
-const addItem =async(req,res)=>{
-  const {name,price,variants,imageUrl, publicId,restId,restName,category,stockAmount,costPrice,description} = addItemSchema.parse(req.body)
-
-  try{
-    const addItem = await prisma.inventory.create({
-    data:{
+const addItem = async (req, res) => {
+  try {
+    const {
       name,
       price,
-      category,
-      costPrice,
-      description,
-      userId: req.user.id,
-      
-      variants:{
-        create: variants || []
-      },
-      imageUrl, 
+      variants,
+      imageUrl,
       publicId,
       restId,
       restName,
+      category,
       stockAmount,
-   
+      costPrice,
+      description,
+    } = addItemSchema.parse(req.body);
 
-    },
-    include: {
-      variants: true
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        error: "Not Authorized",
+      });
     }
 
-  })
+    const currentItems = await prisma.inventory.count({
+      where: {
+        userId,
+      },
+    });
 
-  await invalidateInventoryCache(req.user.id, restId)
+    await InventLimitChecker(userId, currentItems);
 
-  res.json({status: 201,message: 'item added successfully'})
+    const item = await prisma.inventory.create({
+      data: {
+        name,
+        price,
+        category,
+        costPrice,
+        description,
+        userId,
+        variants: {
+          create: variants || [],
+        },
+        imageUrl,
+        publicId,
+        restId,
+        restName,
+        stockAmount,
+      },
+      include: {
+        variants: true,
+      },
+    });
+
+    await invalidateInventoryCache(userId, restId);
+
+    return res.status(201).json({
+      status: "success",
+      message: "Item added successfully",
+      data: item,
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(400).json({
+      error: err.message,
+    });
   }
-  catch(err){
-    console.error(err)
-    res.json({status:400,message: 'could not add item',err})
-  }
-
-  
-
-
-}
-
+};
 
 //view item as merchant
 
@@ -165,6 +214,11 @@ const viewPublicItem = async (req, res) => {
 
   const restaurant = await prisma.restList.findUnique({
     where: { subdomain },
+    omit: {
+    userId:true
+  },
+    
+    
   });
 
   if (!restaurant) {
@@ -177,6 +231,9 @@ const viewPublicItem = async (req, res) => {
     where: {
       restId: restaurant.id,
     },
+    omit: {
+    userId:true
+  },
     include: {
       variants: true,
     },
@@ -212,7 +269,7 @@ const deleteItem = async(req,res)=>{
     }
 
   if(item.userId !== req.user.id){
-    res.json({error:'user does not exist'})
+    return res.json({error:'user does not exist'})
   }
 
 
@@ -234,8 +291,8 @@ const deleteItem = async(req,res)=>{
 
   }
   catch(err){
-    console.log(err)
-    res.json({
+   
+    return res.json({
       status:'failed', message:'item could not be deleted',err
     })
   }
@@ -256,6 +313,12 @@ const updateItem = async (req, res) => {
     if (!existingItem) {
       return res.json({ error: "Item not found" });
     }
+
+    if (existingItem.userId !== req.user.id) {
+  return res.status(403).json({
+    error: "Not Authorized",
+  });
+}
     // 2. if new image uploaded → delete old one
     if (existingItem.imageUrl && existingItem.publicId) {
       await cloudinary.uploader.destroy(existingItem.publicId);

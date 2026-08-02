@@ -27,6 +27,7 @@ const updateRestaurantSettings = async (req, res) => {
       deliveryWindows,
       lat,
       long,
+      crimsonBranding
     } = req.body;
 
     // Get existing restaurant
@@ -86,6 +87,7 @@ const updateRestaurantSettings = async (req, res) => {
         deliveryWindows,
         lat,
         long,
+        crimsonBranding
       },
     });
 

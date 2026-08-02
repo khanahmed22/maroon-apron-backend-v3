@@ -1,4 +1,13 @@
 import prisma from "../db.js";
+import { z} from "zod";
+
+const addDeliveryAreaSchema = z.object({
+  deliveryFee: z.string().min(1),
+  minOrder: z.string().min(1),
+  areaName: z.string().min(2),
+  cityName:z.string().min(2)
+
+})
 
 //view areas
 
@@ -38,7 +47,7 @@ const viewAreas = async (req, res) => {
 const addArea = async(req,res)=>{
   const restId = req.params.restId
   const userId = req.user.id
-  const {deliveryFee,minOrder,areaName,cityName} = req.body
+  const {deliveryFee,minOrder,areaName,cityName} = addDeliveryAreaSchema.parse(req.body)
 
   try{
     const add = await prisma.areaList.create({
@@ -63,7 +72,7 @@ const addArea = async(req,res)=>{
     return res.json({status:'success',message:'area added'})
   }
   catch(err){
-    res.json({error:'could not add area',err})
+    return res.json({error:'could not add area',err})
   }
 
 }
