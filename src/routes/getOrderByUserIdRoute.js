@@ -6,7 +6,7 @@ const orderByUserIdRouter = Router({
 })
 
 
-orderByUserIdRouter.get("/", protect, async (req, res) => {
+orderByUserIdRouter.get("/", protect, async (req, res,next) => {
   try {
     const { subdomain } = req.params;
 
@@ -34,10 +34,9 @@ orderByUserIdRouter.get("/", protect, async (req, res) => {
 
     res.json(orders);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      error: "Server error",err,
-    });
+   err.status = 500
+    next(err)
+
   }
 });
 export  default orderByUserIdRouter

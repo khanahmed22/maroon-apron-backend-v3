@@ -40,7 +40,7 @@ const InventLimitChecker = async (userId, currentItems) => {
 //add item
 
 const addItemSchema = z.object({
-  name: z.string().min(3),
+  name: z.number().min(3),
   price: z.number().min(0).default(0),
   costPrice: z.string(),
   imageUrl: z.string().optional(),
@@ -63,7 +63,7 @@ const addItemSchema = z.object({
 
 //add item
 
-const addItem = async (req, res) => {
+const addItem = async (req, res,next) => {
   try {
     const {
       name,
@@ -125,17 +125,14 @@ const addItem = async (req, res) => {
       data: item,
     });
   } catch (err) {
-    console.error(err);
-
-    return res.status(400).json({
-      error: err.message,
-    });
+    err.status = 400
+    next(err)
   }
 };
 
 //view item as merchant
 
-const viewItem = async (req, res) => {
+const viewItem = async (req, res,next) => {
   const userId = req.user.id
   const cacheKey = `viewItemMerchant:${userId}`
   const cachedInventoryMerchant = await redisClient.get(cacheKey)
@@ -186,11 +183,10 @@ const viewItem = async (req, res) => {
     source: 'database'
   })
   } catch (err) {
-    console.log(err);
+    err.status = 500
+    next(err)
 
-    res.status(500).json({
-      error: "Failed to fetch inventory",
-    });
+  
   }
    
 };
@@ -255,7 +251,7 @@ const viewPublicItem = async (req, res) => {
 
 //delete item 
 
-const deleteItem = async(req,res)=>{
+const deleteItem = async(req,res,next)=>{
   const {id} = req.body
 
   try{
@@ -291,10 +287,8 @@ const deleteItem = async(req,res)=>{
 
   }
   catch(err){
-   
-    return res.json({
-      status:'failed', message:'item could not be deleted',err
-    })
+    err.status = 400
+    next(err)
   }
 
   
@@ -303,7 +297,7 @@ const deleteItem = async(req,res)=>{
 
 // update item
 
-const updateItem = async (req, res) => {
+const updateItem = async (req, res,next) => {
   const { id, name, price, imageUrl, publicId, variants,restId,restName,category,stockAmount,costPrice,description } = req.body;
   try {
     // 1. get existing item
@@ -357,8 +351,8 @@ const updateItem = async (req, res) => {
       data: updated,
     });
   } catch (err) {
-    console.log(err);
-    res.json({ status: "failed", message: "failed to update item" });
+    err.status = 400
+    next(err)
   }
 };
 

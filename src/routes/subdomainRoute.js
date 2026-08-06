@@ -3,7 +3,7 @@ import prisma from "../db.js";
 
 const subRouter = Router();
 
-subRouter.get("/", async (req, res) => {
+subRouter.get("/", async (req, res,next) => {
   try {
    
     const forwardedHost = req.headers["x-forwarded-host"];
@@ -62,12 +62,9 @@ subRouter.get("/", async (req, res) => {
       restaurant,
     });
   } catch (error) {
-    console.error(error);
+    err.status = 500
+    next(err)
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
   }
 });
 

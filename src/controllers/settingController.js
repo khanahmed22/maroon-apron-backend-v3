@@ -1,7 +1,7 @@
 import prisma from "../db.js";
 import cloudinary from "../../config/cloudinary.js";
 
-const updateRestaurantSettings = async (req, res) => {
+const updateRestaurantSettings = async (req, res,next) => {
   try {
     const {
       id,
@@ -97,7 +97,8 @@ const updateRestaurantSettings = async (req, res) => {
       restaurant,
     });
   } catch (err) {
-    console.log(err);
+     err.status = 404
+    next(err)
 
     return res.status(500).json({
       success: false,

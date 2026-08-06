@@ -11,7 +11,7 @@ const invalidateInventoryCache = async (userId, restId) => {
     await redisClient.del(`viewItemCustomer:${restaurant.subdomain}`);
   }
 };
-const viewOrder = async(req,res)=>{
+const viewOrder = async(req,res,next)=>{
   const {restId} = req.params
   try{
     const vieworders = await prisma.orders.findMany({
@@ -24,13 +24,12 @@ const viewOrder = async(req,res)=>{
     res.json(vieworders)
   }
   catch(err){
-    console.log(err)
-      res.status(500).json({ error: "Failed to fetch orders" });
-
+    err.status = 404
+    next(err)
   }
 }
 
-const addOrder = async(req,res)=>{
+const addOrder = async(req,res,next)=>{
   
   const {custDetails,cart,coupon} = req.body
 
@@ -190,14 +189,14 @@ io.to(add.restId).emit("newOrder", {
   
   }
   catch(err){
-    console.log(err)
-    res.json(err)
+     err.status = 404
+    next(err)
   }
   
 
   
 }
-const updateOrder = async (req, res) => {
+const updateOrder = async (req, res,next) => {
   const { id, status } = req.body;
 
   try {
@@ -247,7 +246,8 @@ const updateOrder = async (req, res) => {
   try {
   await invalidateInventoryCache(req.user.id, order.restId);
 } catch (err) {
-  console.error("Redis error:", err);
+   err.status = 404
+    next(err)
 }
   
 }
@@ -304,12 +304,10 @@ const updateOrder = async (req, res) => {
       message: "Order status updated",
     });
   } catch (err) {
-  console.error(err);
+  err.status = 404
+    next(err)
 
-  return res.status(500).json({
-    message: err instanceof Error ? err.message : String(err),
-    stack: err instanceof Error ? err.stack : undefined,
-  });
+ 
 }
 };
 

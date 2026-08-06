@@ -3,7 +3,7 @@ import { protect } from "../authMiddleware/protect.js";
 import prisma from "../db.js";
 const accountRouter = Router()
 
-accountRouter.get("/account", protect, async (req, res) => {
+accountRouter.get("/account", protect, async (req, res,next) => {
   try {
 
     const user = await prisma.user.findUnique({
@@ -25,15 +25,14 @@ accountRouter.get("/account", protect, async (req, res) => {
     res.json(user);
 
   } catch (err) {
-    console.log(err);
+ err.status = 404
+    next(err)
 
-    res.status(500).json({
-      error: "Server Error",
-    });
+    
   }
 });
 
-accountRouter.post("/create-paddle-link", protect, async (req, res) => {
+accountRouter.post("/create-paddle-link", protect, async (req, res,next) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -88,15 +87,13 @@ accountRouter.post("/create-paddle-link", protect, async (req, res) => {
 
     res.json({ url });
   } catch (err) {
-    console.error(err);
+     err.status = 404
+    next(err)
 
-    res.status(500).json({
-      error: "Server Error",
-    });
   }
 });
 
-accountRouter.post("/webhook", async (req, res) => {
+accountRouter.post("/webhook", async (req, res,next) => {
   try {
     console.log("🔥 WEBHOOK RECEIVED");
     console.log(JSON.stringify(req.body, null, 2));
@@ -153,8 +150,8 @@ accountRouter.post("/webhook", async (req, res) => {
 
     res.sendStatus(200);
   } catch (err) {
-    console.error(err);
-    res.sendStatus(500);
+     err.status = 404
+    next(err)
   }
 });
 

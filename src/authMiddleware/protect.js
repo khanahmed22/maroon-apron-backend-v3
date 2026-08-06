@@ -39,9 +39,8 @@ export const protect = async (req, res, next) => {
     
     next();
   } catch (err) {
-    console.log(err);
-    res.status(401).json({
-      error: "Invalid token",
-    });
+    err.status =500
+    next(err);
+    
   }
 };

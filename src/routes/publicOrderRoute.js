@@ -4,7 +4,7 @@ import prisma from '../db.js'
 
 const publicOrderRouter = Router()
 
-publicOrderRouter.get("/:orderNumber", async (req, res) => {
+publicOrderRouter.get("/:orderNumber", async (req, res,next) => {
   try {
     const { orderNumber } = req.params;
 
@@ -22,7 +22,9 @@ publicOrderRouter.get("/:orderNumber", async (req, res) => {
 
     res.json(order);
   } catch (err) {
-    console.error(err);
+    err.status = 500
+    next(err)
+
 
     res.status(500).json({
       error: "Server error",

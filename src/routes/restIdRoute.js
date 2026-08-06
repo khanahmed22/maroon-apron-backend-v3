@@ -3,9 +3,13 @@ import { Router } from "express";
 import { protect } from "../authMiddleware/protect.js";
 import prisma from "../db.js";
 const restIdRouter = Router()
-const fetchRestId = async(req,res)=>{
+const fetchRestId = async(req,res,next)=>{
+
+  
   const userId = req.user.id
-  const getId = await prisma.restList.findUnique({
+
+  try{
+     const getId = await prisma.restList.findUnique({
     where:{userId:userId }
   })
 
@@ -16,6 +20,13 @@ const fetchRestId = async(req,res)=>{
   return res.json({
     getId
   })
+  }
+  catch(err){
+    err.status = 404
+    next(err)
+
+  }
+ 
 }
 
 

@@ -9,7 +9,7 @@ const resetPasswordRouter = Router();
  * Verify reset token
  * GET /reset-password/:token
  */
-resetPasswordRouter.get("/:token", async (req, res) => {
+resetPasswordRouter.get("/:token", async (req, res,next) => {
   const { token } = req.params;
 
   const hashedToken = crypto
@@ -38,9 +38,9 @@ resetPasswordRouter.get("/:token", async (req, res) => {
       valid: true,
     });
   } catch (err) {
-    return res.status(500).json({
-      error: "Something went wrong",
-    });
+   err.status = 500
+    next(err)
+
   }
 });
 
@@ -48,7 +48,7 @@ resetPasswordRouter.get("/:token", async (req, res) => {
  * Reset password
  * POST /reset-password
  */
-resetPasswordRouter.post("/", async (req, res) => {
+resetPasswordRouter.post("/", async (req, res,next) => {
   const { password, token } = req.body;
 
   const hashedToken = crypto
@@ -94,9 +94,9 @@ resetPasswordRouter.post("/", async (req, res) => {
       message: "Password updated successfully.",
     });
   } catch (err) {
-    return res.status(500).json({
-      error: "Something went wrong",
-    });
+    err.status = 500
+    next(err)
+
   }
 });
 

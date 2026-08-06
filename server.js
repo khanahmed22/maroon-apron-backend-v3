@@ -26,6 +26,8 @@ import deliveryRouter from './src/routes/deliveryZoneRoute.js'
 import analyticsRouter from './src/routes/analyticsRoute.js'
 import couponRouter from './src/routes/couponRoute.js'
 import fixRouter from './src/routes/fixRateRoute.js'
+import errorMiddleware from './src/errorMiddleware/errorMiddleware.js'
+import Sentry from "./src/utils/sentryConfig.js";
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
@@ -133,6 +135,10 @@ app.use(
   rateLimiter(200, 60),
   fixRouter
 )
+
+//error middleware
+
+app.use(errorMiddleware)
 
 
 server.listen(3000, () => {

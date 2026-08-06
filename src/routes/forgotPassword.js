@@ -7,7 +7,7 @@ const forgotPasswordRouter = Router();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 //merchant
-forgotPasswordRouter.post("/merchant", async (req, res) => {
+forgotPasswordRouter.post("/merchant", async (req, res,next) => {
   const { email } = req.body;
 
   try {
@@ -124,18 +124,17 @@ forgotPasswordRouter.post("/merchant", async (req, res) => {
       message: "If an account exists, a password reset email has been sent.",
     });
   } catch (err) {
-    console.error(err);
+    err.status = 500
+    next(err)
 
-    return res.status(500).json({
-      error: "Something went wrong.",
-    });
+    
   }
 });
 
 
 //customer
 
-forgotPasswordRouter.post("/customer", async (req, res) => {
+forgotPasswordRouter.post("/customer", async (req, res,next) => {
   const { email,subdomain } = req.body;
 
   try {
@@ -252,11 +251,8 @@ forgotPasswordRouter.post("/customer", async (req, res) => {
       message: "If an account exists, a password reset email has been sent.",
     });
   } catch (err) {
-    console.error(err);
-
-    return res.status(500).json({
-      error: "Something went wrong.",
-    });
+    err.status = 404
+    next(err)
   }
 });
 

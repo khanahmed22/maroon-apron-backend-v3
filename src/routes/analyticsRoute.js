@@ -4,8 +4,8 @@ import prisma from "../db.js";
 
 const analyticsRouter = Router();
 
-// GET /analytics/orders/:restId?from=ISO&to=ISO
-analyticsRouter.get("/orders/:restId", protect, async (req, res) => {
+
+analyticsRouter.get("/orders/:restId", protect, async (req, res,next) => {
   const { restId } = req.params;
   const { from, to } = req.query;
 
@@ -38,10 +38,8 @@ analyticsRouter.get("/orders/:restId", protect, async (req, res) => {
 
     return res.json(orders);
   } catch (err) {
-    console.error("FULL ERROR:", err);
-    return res.status(500).json({
-      message: err instanceof Error ? err.message : String(err),
-    });
+    err.status = 404
+    next(err)
   }
 });
 

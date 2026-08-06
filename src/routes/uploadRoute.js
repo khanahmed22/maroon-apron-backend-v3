@@ -8,7 +8,7 @@ const imageUploadRouter = express.Router();
 imageUploadRouter.post(
   "/upload",
   uploadImage.single("image"),
-  async (req, res) => {
+  async (req, res,next) => {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -38,11 +38,9 @@ imageUploadRouter.post(
         publicId: result.public_id,
       });
     } catch (err) {
-      console.log(err);
+      err.status = 500
+    next(err)
 
-      res.status(500).json({
-        message: "Upload failed",
-      });
     }
   },
 );

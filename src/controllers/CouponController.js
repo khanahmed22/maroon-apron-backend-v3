@@ -1,7 +1,7 @@
 import prisma from "../db.js"
 
 
-const getCoupons=async(req,res)=> {
+const getCoupons=async(req,res,next)=> {
   const { restId } = req.params;
 
   try {
@@ -11,13 +11,14 @@ const getCoupons=async(req,res)=> {
 
     return res.json(coupons);
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Failed to fetch coupons" });
+    err.status= 404
+    next(err)
+    
   }
 }
 
 //create coupon
-const createCoupon= async(req, res)=> {
+const createCoupon= async(req, res,next)=> {
   const { restId } = req.params;
   const {
     code,
@@ -49,14 +50,14 @@ const createCoupon= async(req, res)=> {
     return res.status(201).json(coupon);
   } catch (err) {
    
-
-    console.error(err);
-    return res.status(500).json({ error: "Failed to create coupon" });
+    err.status = 500
+    next(err)
+   
   }
 }
 
 //delete coupon
-const deleteCoupon=async(req, res)=> {
+const deleteCoupon=async(req, res,next)=> {
   const { restId } = req.params;
   const { id } = req.body;
 
@@ -76,8 +77,9 @@ const deleteCoupon=async(req, res)=> {
 
     return res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Failed to delete coupon" });
+    err.status = 400
+    next(err)
+   
   }
 }
 
@@ -116,7 +118,7 @@ const checkCoupon=async(code, restId, userId, cartTotal)=> {
 }
  
 
-const validateCoupon=async(req, res)=> {
+const validateCoupon=async(req, res,next)=> {
   const { code, cartTotal, userId, restId } = req.body;
  
   if (!code || !userId || cartTotal === undefined || !restId) {
@@ -136,8 +138,9 @@ const validateCoupon=async(req, res)=> {
       couponId: result.coupon.id,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Failed to validate coupon" });
+    err.status = 500
+    next(err)
+    
   }
 }
 

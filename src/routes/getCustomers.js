@@ -2,10 +2,12 @@ import express,{Router} from "express";
 import prisma from "../db.js";
 const custRouter = Router()
 
-custRouter.get('/:subdomain', async(req,res)=>{
+custRouter.get('/:subdomain', async(req,res,next)=>{
+
   const {subdomain} = req.params
 
-  const getCustomers = await prisma.user.findMany({
+  try{
+    const getCustomers = await prisma.user.findMany({
     where: {subdomain: subdomain},
     select:{
       email:true,
@@ -19,6 +21,14 @@ custRouter.get('/:subdomain', async(req,res)=>{
 
   res.json(getCustomers)
 
+  }
+  catch(err){
+    err.status = 500
+    next(err)
+
+  }
+
+  
 })
 
 export default custRouter

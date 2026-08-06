@@ -4,7 +4,7 @@ import { protect } from '../authMiddleware/protect.js';
 import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY)
 const merchantVerifRouter = Router()
-merchantVerifRouter.post("/",protect, async (req, res) => {
+merchantVerifRouter.post("/",protect, async (req, res,next) => {
 
   const userId = req.user.id
   const {
@@ -80,13 +80,15 @@ merchantVerifRouter.post("/",protect, async (req, res) => {
   return res.json({success:'application submitted'})
   }   
   catch(err){
-    return res.json({error:'unable to submit application'})
+   err.status = 500
+    next(err)
+
   }
 
   
 });
 
-merchantVerifRouter.get('/submitted-application',protect,async(req,res)=>{
+merchantVerifRouter.get('/submitted-application',protect,async(req,res,next)=>{
 
   const userId = req.user.id
 
@@ -99,7 +101,9 @@ merchantVerifRouter.get('/submitted-application',protect,async(req,res)=>{
   return res.json(checkSubmission)
   }
   catch(err){
-    return res.json({error:'application not found'})
+    err.status = 500
+    next(err)
+
   }
 
   

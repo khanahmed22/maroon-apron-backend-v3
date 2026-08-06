@@ -7,12 +7,11 @@ const domainRouter = Router()
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Where these requests actually go — always decided here on the server,
-// never trust a "notifyEmail" field from the client for the real send target.
+
 const DOMAIN_REQUEST_INBOX = "ahmed.khans.mk@gmail.com"
 const FROM_ADDRESS = "Crimson Castle <team@crimsoncastle.biz>"
 
-domainRouter.post("/", async (req, res) => {
+domainRouter.post("/", async (req, res,next) => {
   const { restId, restName, requestedDomain, merchantEmail } = req.body
 
   if (!requestedDomain || !restId) {
@@ -59,8 +58,9 @@ domainRouter.post("/", async (req, res) => {
 
     return res.status(200).json({ success: true, id: data?.id })
   } catch (err) {
-    console.log(err)
-    return res.status(500).json({ error: "Something went wrong" })
+    err.status = 500
+    next(err)
+
   }
 })
 

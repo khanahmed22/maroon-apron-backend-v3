@@ -4,10 +4,11 @@ import prisma from "../db.js";
 import { protect } from "../authMiddleware/protect.js";
 const giveRestDetails = Router()
 //customer
-giveRestDetails.post("/",async(req,res)=>{
+giveRestDetails.post("/",async(req,res,next)=>{
   const {subdomain} = req.body
-  
-  const getRest = await prisma.restList.findUnique({
+
+  try{
+    const getRest = await prisma.restList.findUnique({
     where:{subdomain:subdomain},
     select: {
     id: true,
@@ -45,6 +46,14 @@ giveRestDetails.post("/",async(req,res)=>{
   }
 
   res.json({getRest})
+  }
+  catch(err){
+    err.status = 500
+    next(err)
+
+  }
+  
+  
   
 })
 

@@ -15,7 +15,7 @@ const getRestIdForUser = async (userId) => {
 };
 
 // View fixed rate
-fixRouter.get("/:restId/view", async (req, res) => {
+fixRouter.get("/:restId/view", async (req, res,next) => {
   const { restId } = req.params;
 
   try {
@@ -37,15 +37,13 @@ fixRouter.get("/:restId/view", async (req, res) => {
 
     return res.json(viewRate);
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      error: "Could not fetch fixed rate",
-    });
+     err.status = 500
+    next(err)
   }
 });
 
 // Update fixed rate + minimum order
-fixRouter.put("/:restId/update", protect, async (req, res) => {
+fixRouter.put("/:restId/update", protect, async (req, res,next) => {
   const userId = req.user.id;
 
   const {
@@ -95,15 +93,13 @@ fixRouter.put("/:restId/update", protect, async (req, res) => {
       success: "Rate updated",
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      error: "Could not update fixed rate",
-    });
+     err.status = 404
+    next(err)
   }
 });
 
 // Enable fixed rate mode
-fixRouter.put("/enableFixRate", protect, async (req, res) => {
+fixRouter.put("/enableFixRate", protect, async (req, res,next) => {
   const userId = req.user.id;
 
   try {
@@ -135,15 +131,13 @@ fixRouter.put("/enableFixRate", protect, async (req, res) => {
       success: "Enabled fixed rate mode",
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      error: "Failed to enable fixed rate mode",
-    });
+    err.status = 404
+    next(err)
   }
 });
 
 // Disable fixed rate mode
-fixRouter.put("/disableFixRate", protect, async (req, res) => {
+fixRouter.put("/disableFixRate", protect, async (req, res,next) => {
   const userId = req.user.id;
 
   try {
@@ -175,10 +169,8 @@ fixRouter.put("/disableFixRate", protect, async (req, res) => {
       success: "Disabled fixed rate mode",
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      error: "Failed to disable fixed rate mode",
-    });
+     err.status = 404
+    next(err)
   }
 });
 

@@ -11,7 +11,7 @@ const addDeliveryAreaSchema = z.object({
 
 //view areas
 
-const viewAreas = async (req, res) => {
+const viewAreas = async (req, res,next) => {
  
   const restId = req.params.restId
 
@@ -35,16 +35,14 @@ const viewAreas = async (req, res) => {
 
     return res.json(result);
   } catch (err) {
-    console.error("FULL ERROR:", err);
-    return res.status(500).json({
-      message: err instanceof Error ? err.message : String(err),
-    });
+    err.status = 404
+    next(err)
   }
 }
 
 // add areas
 
-const addArea = async(req,res)=>{
+const addArea = async(req,res,next)=>{
   const restId = req.params.restId
   const userId = req.user.id
   const {deliveryFee,minOrder,areaName,cityName} = addDeliveryAreaSchema.parse(req.body)
@@ -72,14 +70,15 @@ const addArea = async(req,res)=>{
     return res.json({status:'success',message:'area added'})
   }
   catch(err){
-    return res.json({error:'could not add area',err})
+    err.status = 400
+    next(err)
   }
 
 }
 
 //delete area
 
-const deleteArea = async (req, res) => {
+const deleteArea = async (req, res,next) => {
   try {
     const { restId } = req.params;
     const { areaId } = req.body;
@@ -120,7 +119,8 @@ const deleteArea = async (req, res) => {
       message: "Area deleted successfully",
     });
   } catch (err) {
-    console.error(err);
+    err.status = 400
+    next(err);
 
     return res.status(500).json({
       error: err instanceof Error ? err.message : "Failed to delete area",
@@ -130,7 +130,7 @@ const deleteArea = async (req, res) => {
 
 //update area
 
-const updateArea = async (req, res) => {
+const updateArea = async (req, res,next) => {
   const { areaId, cityName, areaName } = req.body;
   const { restId } = req.params;
   const userId = req.user.id;
@@ -175,7 +175,8 @@ const updateArea = async (req, res) => {
       message: "Area updated successfully",
     });
   } catch (err) {
-    console.error(err);
+    err.status = 400
+    next(err)
 
     return res.status(500).json({
       error: err instanceof Error ? err.message : "Failed to update area",
