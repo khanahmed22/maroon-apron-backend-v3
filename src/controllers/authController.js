@@ -353,9 +353,12 @@ const logout = async (req, res, next) => {
   try {
     res.cookie("jwt","",{
       httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
       expires: new Date(0)
     })
-    res.status(200).json({
+    return res.status(200).json({
       status: "success",
       message: "logged out successfully"
     })
