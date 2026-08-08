@@ -94,7 +94,7 @@ const registerMerchant = async (req, res, next) => {
     return res.json({message: 'user created, email sent'})
 
   } catch(err){
-    err.status = 500
+    err.status = 400
     next(err)
   }
 }
@@ -160,7 +160,7 @@ const register = async (req, res, next) => {
     return res.json({message: 'user created, email sent'})
 
   } catch(err){
-    err.status = 500
+    err.status = 400
     next(err)
   }
 }

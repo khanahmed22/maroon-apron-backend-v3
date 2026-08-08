@@ -61,7 +61,7 @@ subRouter.get("/", async (req, res,next) => {
       success: true,
       restaurant,
     });
-  } catch (error) {
+  } catch (err) {
     err.status = 500
     next(err)
 
