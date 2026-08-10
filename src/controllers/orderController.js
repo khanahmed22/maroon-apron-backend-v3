@@ -37,33 +37,42 @@ const addOrder = async(req,res,next)=>{
    
     const [add] = await prisma.$transaction([
       prisma.orders.create({
-        data:{
-          orderNumber:custDetails.orderNumber,
+        data: {
+          orderNumber: custDetails.orderNumber,
           custName: custDetails.custName,
-          custEmail:custDetails.custEmail,
-          custAddress:custDetails.custAddress,
-          custPhone:custDetails.custPhone,
+          custEmail: custDetails.custEmail,
+          custAddress: custDetails.custAddress,
+          custPhone: custDetails.custPhone,
           recieveMethod: custDetails.recieveMethod,
           createdAt: custDetails.createdAt,
           orderDetails: cart,
           restId: custDetails.restId,
-          orderTotal:custDetails.orderTotal,
-          restName:custDetails.restName,
-          deliveryArea:custDetails.deliveryArea,
-          deliveryFee:custDetails.deliveryFee,
-          
+          orderTotal: custDetails.orderTotal,
+          restName: custDetails.restName,
+          deliveryArea: custDetails.deliveryArea,
+          deliveryFee: custDetails.deliveryFee,
+
           couponId: coupon?.couponId ?? null,
           couponCode: coupon?.code ?? null,
           discountAmount: coupon?.discount ?? 0,
-          isPreOrder:custDetails.isPreOrder,
-          scheduledDate: new Date(custDetails.scheduledDate),
-          scheduledWindow: (custDetails.scheduledWindow),
-        }
+          isPreOrder: custDetails.isPreOrder,
+          scheduledDate:
+            custDetails.isPreOrder && custDetails.scheduledDate
+              ? new Date(custDetails.scheduledDate)
+              : null,
+          scheduledWindow:
+            custDetails.isPreOrder && custDetails.scheduledWindow
+              ? custDetails.scheduledWindow
+              : null,
+        },
       }),
       ...(coupon?.couponId
         ? [
             prisma.couponUsage.create({
-              data: { couponId: coupon.couponId, userId: custDetails.custEmail },
+              data: {
+                couponId: coupon.couponId,
+                userId: custDetails.custEmail,
+              },
             }),
             prisma.coupon.update({
               where: { id: coupon.couponId },
@@ -71,7 +80,7 @@ const addOrder = async(req,res,next)=>{
             }),
           ]
         : []),
-    ])
+    ]);
 
   const io = getIO();
 
