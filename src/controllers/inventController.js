@@ -193,60 +193,53 @@ const viewItem = async (req, res,next) => {
 
 //view as customer
 
-const viewPublicItem = async (req, res) => {
-  const { subdomain } = req.params;
- 
-  const cacheKey = `viewItemCustomer:${subdomain}`
-  const cachedInventoryCustomer = await redisClient.get(cacheKey)
+const viewPublicItem = async (req, res, next) => {
+  const { subdomain: identifier } = req.params;
 
-  if(cachedInventoryCustomer){
-    return res.json({
-      status:'success',
-      data:JSON.parse(cachedInventoryCustomer),
-      source:'redis'
-    })
-  }
-
-
-  const restaurant = await prisma.restList.findUnique({
-    where: { subdomain },
-    omit: {
-    userId:true
-  },
-    
-    
-  });
-
-  if (!restaurant) {
-    return res.status(404).json({
-      error: "Restaurant not found",
+  try {
+    // resolve first — we need the canonical subdomain for a stable cache key,
+    // since `identifier` might be a custom domain like "pizzatown.lol"
+    const restaurant = await prisma.restList.findFirst({
+      where: {
+        OR: [{ subdomain: identifier }, { customDomain: identifier }],
+      },
+      omit: { userId: true },
     });
+
+    if (!restaurant) {
+      return res.status(404).json({
+        error: "Restaurant not found",
+      });
+    }
+
+    const cacheKey = `viewItemCustomer:${restaurant.subdomain}`;
+    const cachedInventoryCustomer = await redisClient.get(cacheKey);
+
+    if (cachedInventoryCustomer) {
+      return res.json({
+        status: "success",
+        data: JSON.parse(cachedInventoryCustomer),
+        source: "redis",
+      });
+    }
+
+    const items = await prisma.inventory.findMany({
+      where: { restId: restaurant.id },
+      omit: { userId: true },
+      include: { variants: true },
+    });
+
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(items));
+
+    res.json({
+      status: "success",
+      data: items,
+      source: "database",
+    });
+  } catch (err) {
+    err.status = 500;
+    next(err);
   }
-
-  const items = await prisma.inventory.findMany({
-    where: {
-      restId: restaurant.id,
-    },
-    omit: {
-    userId:true
-  },
-    include: {
-      variants: true,
-    },
-  });
-
- 
-  
-    await redisClient.setEx(
-    cacheKey,
-    3600,
-    JSON.stringify(items)
-  )
-  res.json({
-    status: 'success',
-    data: items,
-    source: 'database'
-  })
 };
 
 //delete item 

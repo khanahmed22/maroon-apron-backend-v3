@@ -56,7 +56,7 @@ model RestList{
   id String @id @default(uuid()) 
   userId String @unique
   createdAt DateTime @default(now())
-  restName String
+  restName String?
   restAnnouncement String?
   restPhone String?
   restEmail String?

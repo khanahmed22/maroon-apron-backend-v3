@@ -139,7 +139,7 @@ const register = async (req, res, next) => {
 
     const verifToken = verificationToken(user.id)
 
-    const verificationUrl = `http://${subdomain}.${process.env.CRIMSON_NEXT_URL}/verify-email/${role}/${verifToken}`;
+    const verificationUrl = `https://${subdomain}.${process.env.CRIMSON_NEXT_URL}/verify-email/${role}/${verifToken}`;
 
     await resend.emails.send({
     from: "no-reply@crimsoncastle.shop",
@@ -167,43 +167,79 @@ const register = async (req, res, next) => {
 
 //Verify Email
 
-const verifyEmail = async(req,res,next)=>{
-  try{
-    const {token} = req.params
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { token, role } = req.params;
 
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET
-    )
+    );
 
     const user = await prisma.user.findUnique({
       where: {
         id: decoded.userId
       },
       select: {
-    id: true,
-  },
-    })
+        id: true,
+        role: true,
+        isVerified: true,
+        name: true
+      }
+    });
 
-    if(!user){
-      return res.status(400).json({error:"user not found"})
+    if (!user) {
+      return res.status(400).json({
+        error: "User not found"
+      });
     }
 
-    await prisma.user.update({
-      where:{id:user.id},
-      data:{
-        isVerified:true
+    // Make sure the role in URL matches the actual user role
+    if (user.role !== role) {
+      return res.status(403).json({
+        error: "Invalid verification request"
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        error: "Email already verified"
+      });
+    }
+
+    await prisma.$transaction(async (tx) => {
+
+      // Verify email
+      await tx.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          isVerified: true
+        }
+      });
+
+      // Only merchants get a restaurant
+      if (user.role === "merchant") {
+        await tx.restList.create({
+          data: {
+            userId: user.id,
+            
+          }
+        });
       }
-    })
+    });
 
-    res.json({status:'success',message:'email verified'})
-  }
-  catch(err){
-    err.status = 404
-    next(err)
+    return res.json({
+      status: "success",
+      message: "Email verified"
+    });
 
+  } catch (err) {
+    err.status = 400;
+    next(err);
   }
-}
+};
 
 //Login Logic for merchant
 

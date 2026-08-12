@@ -6,7 +6,9 @@ import { me } from '../controllers/authController.js'
 import { verifyEmail } from '../controllers/authController.js'
 import { protect } from '../authMiddleware/protect.js'
 
-const authRouter = Router()
+const authRouter = Router({
+   mergeParams:true
+})
 
 authRouter.post('/register-merchant', registerMerchant)
 
