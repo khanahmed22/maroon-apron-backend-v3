@@ -21,19 +21,18 @@ model User{
   role String
   subdomain String?
   plan String @default("free")
-  merchant_verify Boolean @default(false)
   subscription_id String?
   paddleCustomerId    String?
   
 
 
 
-  merchantapp MerchantApps[]
 
   inventory Inventory[]
   resetTokens PasswordResetToken[]
   areaList AreaList[]
   fixedRate FixedRate[]
+  restList RestList[]
 
 
 }
@@ -85,6 +84,8 @@ model RestList{
   orders Orders[]
   coupons Coupon[]
 
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 
 }
 
@@ -119,27 +120,6 @@ model InventVariants {
 }
 
 
-
-
-
-model MerchantApps{
-  id String @id @default(uuid())
-  createdAt DateTime @default(now())
-  userId String @unique()
-  email String @unique()
-  full_name String
-  phone String
-  business_name String
-  address String?
-  category String
-  description String
-  social_links String?
-  cnic String
-  status String @default("submitted")
-  user User @relation(fields: [userId],references: [id],onDelete: Cascade)
-
-
-}
 
 model AreaList {
   id String @id @default(uuid())

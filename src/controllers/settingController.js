@@ -1,7 +1,18 @@
 import prisma from "../db.js";
 import cloudinary from "../../config/cloudinary.js";
 
-const updateRestaurantSettings = async (req, res,next) => {
+const CRIMSON_BASE_DOMAIN = "crimsoncastle.shop";
+
+const isValidCustomDomain = (domain, subdomain) => {
+  if (!domain || !subdomain) return false;
+  const value = domain.trim().toLowerCase();
+  const prefix = `${subdomain.toLowerCase()}.`;
+  if (!value.startsWith(prefix)) return false;
+  const suffix = value.slice(prefix.length);
+  return /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/.test(suffix);
+};
+
+const updateRestaurantSettings = async (req, res, next) => {
   try {
     const {
       id,
@@ -27,12 +38,19 @@ const updateRestaurantSettings = async (req, res,next) => {
       deliveryWindows,
       lat,
       long,
-      crimsonBranding
+      crimsonBranding,
+      subdomain,
     } = req.body;
 
-    // Get existing restaurant
+    // Get existing restaurant + plan in a single query now that the
+    // RestList -> User relation exists
     const existingRestaurant = await prisma.restList.findUnique({
       where: { id },
+      include: {
+        user: {
+          select: { plan: true },
+        },
+      },
     });
 
     if (!existingRestaurant) {
@@ -40,6 +58,73 @@ const updateRestaurantSettings = async (req, res,next) => {
         error: "Restaurant not found",
       });
     }
+
+    // Name + subdomain are set together during first-time setup and locked
+    // afterwards. Presence of subdomain is the single source of truth for
+    // "setup complete" — ignore incoming changes to either field once set.
+    const isFirstTimeSetup = !existingRestaurant.subdomain;
+
+    let finalRestName = existingRestaurant.restName;
+    let finalSubdomain = existingRestaurant.subdomain;
+
+    if (isFirstTimeSetup) {
+      if (subdomain) {
+        const subdomainOwner = await prisma.restList.findUnique({
+          where: { subdomain },
+        });
+
+        if (subdomainOwner && subdomainOwner.id !== id) {
+          return res.status(409).json({
+            error: "Subdomain already taken",
+          });
+        }
+
+        finalSubdomain = subdomain;
+      }
+
+      if (restName) {
+        finalRestName = restName;
+      }
+    }
+
+    // Custom domain must always be `{subdomain}.{tld}` — never trust the
+    // raw client value once we know the locked subdomain.
+    let finalCustomDomain = existingRestaurant.customDomain;
+
+    if (customDomain !== undefined) {
+      if (!customDomain) {
+        finalCustomDomain = "";
+      } else if (isValidCustomDomain(customDomain, finalSubdomain)) {
+        const normalizedDomain = customDomain.trim().toLowerCase();
+
+        // customDomain is @unique — check ownership before saving, same
+        // as the subdomain check above.
+        const domainOwner = await prisma.restList.findUnique({
+          where: { customDomain: normalizedDomain },
+        });
+
+        if (domainOwner && domainOwner.id !== id) {
+          return res.status(409).json({
+            error: "Custom domain already taken",
+          });
+        }
+
+        finalCustomDomain = normalizedDomain;
+      } else {
+        return res.status(400).json({
+          error: `Custom domain must start with your subdomain (${finalSubdomain})`,
+        });
+      }
+    }
+
+    const isPro = existingRestaurant.user?.plan && existingRestaurant.user.plan !== "free";
+
+    // restSite is the canonical "visit store" URL — custom domain when on
+    // Pro and one is set, otherwise the crimsoncastle.shop subdomain.
+    const restSite =
+      isPro && finalCustomDomain
+        ? `https://${finalCustomDomain}`
+        : `https://${finalSubdomain}.${CRIMSON_BASE_DOMAIN}`;
 
     // Delete old logo only if a new one was uploaded
     if (
@@ -65,7 +150,7 @@ const updateRestaurantSettings = async (req, res,next) => {
         id,
       },
       data: {
-        restName,
+        restName: finalRestName,
         restPhone,
         restEmail,
         restAddress,
@@ -79,7 +164,8 @@ const updateRestaurantSettings = async (req, res,next) => {
         metaDesc,
         logoId,
         bannerId,
-        customDomain,
+        customDomain: finalCustomDomain,
+        restSite,
         preOrdersEnabled,
         preoOrderMinHours,
         preOrderMaxDays,
@@ -87,7 +173,8 @@ const updateRestaurantSettings = async (req, res,next) => {
         deliveryWindows,
         lat,
         long,
-        crimsonBranding
+        crimsonBranding,
+        subdomain: finalSubdomain,
       },
     });
 
@@ -97,8 +184,8 @@ const updateRestaurantSettings = async (req, res,next) => {
       restaurant,
     });
   } catch (err) {
-     err.status = 404
-    next(err)
+    err.status = 404;
+    next(err);
 
     return res.status(500).json({
       success: false,

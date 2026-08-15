@@ -16,7 +16,6 @@ import custRouter from './src/routes/getCustomers.js'
 import http from 'http'
 import { initSocket } from './src/utils/socket.js'
 import accountRouter from './src/routes/accountRoute.js'
-import merchantVerifRouter from './src/routes/merchantVerif.js'
 import forgotPasswordRouter from './src/routes/forgotPassword.js'
 import resetPasswordRouter from './src/routes/resetPassword.js'
 import subRouter from './src/routes/subdomainRoute.js'
@@ -28,6 +27,7 @@ import couponRouter from './src/routes/couponRoute.js'
 import fixRouter from './src/routes/fixRateRoute.js'
 import errorMiddleware from './src/errorMiddleware/errorMiddleware.js'
 import Sentry from "./src/utils/sentryConfig.js";
+import netlifyRouter from './src/routes/netlifyRoute.js'
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
@@ -102,11 +102,7 @@ app.use('/analytics', rateLimiter(50, 60), analyticsRouter)
 app.use("/coupons", rateLimiter(80, 60),couponRouter);
 
 
-app.use(
-  '/merchant-application',
-  rateLimiter(10, 60),
-  merchantVerifRouter
-)
+
 
 app.use(
   '/forgot-password',
@@ -135,6 +131,9 @@ app.use(
   rateLimiter(200, 60),
   fixRouter
 )
+
+
+app.use("/api/netlify",rateLimiter(300, 60), netlifyRouter);
 
 //error middleware
 

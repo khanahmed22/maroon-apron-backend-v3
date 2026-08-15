@@ -3,6 +3,8 @@ import { protect } from "../authMiddleware/protect.js";
 import prisma from "../db.js";
 const accountRouter = Router()
 
+const CRIMSON_BASE_DOMAIN = "crimsoncastle.shop";
+
 accountRouter.get("/account", protect, async (req, res,next) => {
   try {
 
@@ -14,7 +16,6 @@ accountRouter.get("/account", protect, async (req, res,next) => {
 
       select: {
         email: true,
-        merchant_verify: true,
         plan: true,
         subscription_id: true,
         
@@ -93,6 +94,65 @@ accountRouter.post("/create-paddle-link", protect, async (req, res,next) => {
   }
 });
 
+// Removes a domain alias from the Netlify site. Best-effort — logs on
+// failure rather than throwing, since we never want a Netlify hiccup to
+// break webhook processing (Paddle will retry the whole webhook otherwise).
+const removeNetlifyAlias = async (domain) => {
+  try {
+    const siteId = process.env.NETLIFY_SITE_ID;
+    const token = process.env.NETLIFY_AUTH_TOKEN;
+
+    if (!siteId || !token) {
+      console.error("Netlify configuration is missing, skipping alias removal");
+      return;
+    }
+
+    const siteResponse = await fetch(
+      `https://api.netlify.com/api/v1/sites/${siteId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const siteData = await siteResponse.json();
+
+    if (!siteResponse.ok) {
+      console.error("Failed to fetch Netlify site for alias removal", siteData);
+      return;
+    }
+
+    const currentAliases = siteData.domain_aliases || [];
+    const domainAliases = currentAliases.filter((d) => d !== domain);
+
+    if (domainAliases.length === currentAliases.length) {
+      // domain wasn't in the alias list, nothing to do
+      return;
+    }
+
+    const updateResponse = await fetch(
+      `https://api.netlify.com/api/v1/sites/${siteId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ domain_aliases: domainAliases }),
+      }
+    );
+
+    if (!updateResponse.ok) {
+      const updatedSite = await updateResponse.json();
+      console.error("Failed to remove Netlify alias", updatedSite);
+    }
+  } catch (err) {
+    console.error("Error removing Netlify alias", err);
+  }
+};
+
 accountRouter.post("/webhook", async (req, res,next) => {
   try {
     console.log("🔥 WEBHOOK RECEIVED");
@@ -142,6 +202,31 @@ accountRouter.post("/webhook", async (req, res,next) => {
         });
 
         console.log(`⚠️ User ${userId} downgraded to Free`);
+
+        // Custom domains are a Pro-only feature. On downgrade, clear the
+        // saved customDomain, remove its Netlify alias, and fall back
+        // restSite to the crimsoncastle.shop subdomain.
+        const restList = await prisma.restList.findUnique({
+          where: { userId },
+          select: { id: true, subdomain: true, customDomain: true },
+        });
+
+        if (restList?.customDomain) {
+          await removeNetlifyAlias(restList.customDomain);
+
+          await prisma.restList.update({
+            where: { id: restList.id },
+            data: {
+              customDomain: "",
+              restSite: restList.subdomain
+                ? `https://${restList.subdomain}.${CRIMSON_BASE_DOMAIN}`
+                : null,
+            },
+          });
+
+          console.log(`🧹 Cleared custom domain for restaurant ${restList.id}`);
+        }
+
         break;
 
       default:
