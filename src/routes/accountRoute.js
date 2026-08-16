@@ -71,12 +71,15 @@ accountRouter.post("/create-paddle-link", protect, async (req, res,next) => {
     const result = await paddleRes.json();
 
     if (!paddleRes.ok) {
-      console.error(result);
+  console.error("❌ Paddle portal session failed");
+  console.error("Status:", paddleRes.status);
+  console.error("Response:", JSON.stringify(result, null, 2));
 
-      return res.status(500).json({
-        error: "Failed to create portal session",
-      });
-    }
+  return res.status(paddleRes.status).json({
+    error: "Failed to create portal session",
+    paddle: result,
+  });
+}
 
     const url = result.data?.urls?.general?.overview;
 
