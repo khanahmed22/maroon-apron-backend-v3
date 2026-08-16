@@ -235,9 +235,9 @@ accountRouter.post("/webhook", async (req, res,next) => {
 
     res.sendStatus(200);
   } catch (err) {
-     err.status = 404
-    next(err)
-  }
+  console.error("Paddle webhook error:", err);
+  next(err);
+}
 });
 
 export default accountRouter

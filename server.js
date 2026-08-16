@@ -95,7 +95,7 @@ app.use('/restDetails', rateLimiter(100, 60), giveRestDetails)
 app.use('/settings', rateLimiter(50, 60), settingRouter)
 app.use('/order-placed', rateLimiter(20, 60), publicOrderRouter)
 app.use('/customers', rateLimiter(50, 60), custRouter)
-app.use('/paddle', rateLimiter(30, 60), accountRouter)
+app.use('/paddle', rateLimiter(300, 60), accountRouter)
 app.use('/area-list',rateLimiter(100, 60),deliveryRouter)
 
 app.use('/analytics', rateLimiter(50, 60), analyticsRouter)
