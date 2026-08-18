@@ -137,6 +137,12 @@ app.use("/menu-scan",menuScanRouter);
 
 app.use("/api/netlify",rateLimiter(300, 60), netlifyRouter);
 
+
+//health for uptime robot
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 //error middleware
 
 app.use(errorMiddleware)
