@@ -90,6 +90,28 @@ const registerMerchant = async (req, res, next) => {
 
   });
 
+  // notify admin of new merchant sign up
+
+  await resend.emails.send({
+    from: "alert@crimsoncastle.shop",
+    to: `${process.env.ADMIN_EMAIL}`,
+    subject: "NEW MERCHANT SIGNED UP",
+    html: `
+      <h2>A new merchant signed up at Crimson Castle</h2>
+      <p>Merchant ID: ${user.id}</p>
+      <p>Merchant Name: ${user.name}</p>
+      <p>Merchant Email: ${user.email}</p>
+      <p>Signed up at time: ${user.createdAt}</p>
+      
+
+
+
+
+      
+    `,
+
+  });
+
 
     return res.json({message: 'user created, email sent'})
 
