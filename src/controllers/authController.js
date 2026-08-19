@@ -112,6 +112,8 @@ const registerMerchant = async (req, res, next) => {
 
   });
 
+  
+
 
     return res.json({message: 'user created, email sent'})
 
@@ -206,7 +208,8 @@ const verifyEmail = async (req, res, next) => {
         id: true,
         role: true,
         isVerified: true,
-        name: true
+        name: true,
+        email: true
       }
     });
 
@@ -229,9 +232,9 @@ const verifyEmail = async (req, res, next) => {
       });
     }
 
+    // Verify email + create restaurant in one transaction
     await prisma.$transaction(async (tx) => {
 
-      // Verify email
       await tx.user.update({
         where: {
           id: user.id
@@ -245,12 +248,57 @@ const verifyEmail = async (req, res, next) => {
       if (user.role === "merchant") {
         await tx.restList.create({
           data: {
-            userId: user.id,
-            
+            userId: user.id
           }
         });
       }
     });
+
+    // Send welcome email AFTER verification succeeds
+    if(user.role === "merchant"){
+       try {
+      await resend.emails.send({
+        from: "onboarding@crimsoncastle.shop",
+        to: user.email,
+        subject: "Welcome to Crimson Castle",
+        html: `
+          <h2>Welcome ${user.name}! 🎉</h2>
+
+          <p>
+            Your email has been successfully verified and your
+            Crimson Castle account is now ready.
+          </p>
+
+          <p>
+            We're glad to have you here. Let's get you started.
+          </p>
+
+          <a
+            href="${process.env.CRIMSON_ADMIN_URL}/login"
+            style="
+              display:inline-block;
+              padding:12px 20px;
+              background:#000;
+              color:#fff;
+              text-decoration:none;
+              border-radius:6px;
+            "
+          >
+            Login to Crimson Castle
+          </a>
+
+          <p style="margin-top:24px;">
+            If you didn't create this account, you can safely ignore this email.
+          </p>
+        `
+      });
+    } catch (emailError) {
+      // Don't undo successful email verification just because
+      // the welcome email failed.
+      console.error("Failed to send welcome email:", emailError);
+    }
+    }
+   
 
     return res.json({
       status: "success",

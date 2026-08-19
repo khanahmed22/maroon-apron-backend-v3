@@ -40,7 +40,7 @@ const InventLimitChecker = async (userId, currentItems) => {
 //add item
 
 const addItemSchema = z.object({
-  name: z.number().min(3),
+  name: z.string().min(3),
   price: z.number().min(0).default(0),
   costPrice: z.string(),
   imageUrl: z.string().optional(),
