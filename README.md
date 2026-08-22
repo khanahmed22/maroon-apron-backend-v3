@@ -17,13 +17,13 @@ The backend API for **Crimson Castle**, powering both the **Admin Dashboard** an
 
 The administration dashboard used to manage restaurants, menus, orders, inventory, and other business operations.
 
-[Crimson Castle Admin App](https://github.com/khanahmed22/crimson-admin-v3?utm_source=chatgpt.com)
+[Crimson Castle Admin App](https://github.com/khanahmed22/crimson-admin-v3)
 
 ### Client App
 
 The customer-facing application used to browse menus and place orders.
 
-[Crimson Castle Client App](https://github.com/khanahmed22/crimson-next-v3?utm_source=chatgpt.com)
+[Crimson Castle Client App](https://github.com/khanahmed22/crimson-next-v3)
 
 
 ## Main Responsibilities
