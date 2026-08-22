@@ -9,7 +9,7 @@ The backend API for **Crimson Castle**, powering both the **Admin Dashboard** an
 - **PostgreSQL** - Relational database
 - **Prisma ORM** - Database access and management
 - **Redis** - Rate Limiting and Caching
-- **Zod** - Input Validation
+- **Zod** - Request Validation
 - **Sentry** - Error tracking and monitoring
 
 ## 🔗 Related Applications
