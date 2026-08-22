@@ -8,6 +8,7 @@ The backend API for **Crimson Castle**, powering both the **Admin Dashboard** an
 - **Express.js** - Backend framework
 - **PostgreSQL** - Relational database
 - **Prisma ORM** - Database access and management
+- **Redis** - Rate Limiting and Caching
 - **Sentry** - Error tracking and monitoring
 
 ## 🔗 Related Applications
