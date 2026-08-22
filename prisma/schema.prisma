@@ -49,6 +49,19 @@ model PasswordResetToken {
 
 
 
+model PushSubscription {
+  id        String   @id @default(uuid())
+  restId    String
+  fcmToken  String   @unique
+  createdAt DateTime @default(now())
+
+  restlist  RestList @relation(fields: [restId], references: [id], onDelete: Cascade)
+}
+
+
+
+
+
 
 
 model RestList{
@@ -83,6 +96,8 @@ model RestList{
   inventories Inventory[] 
   orders Orders[]
   coupons Coupon[]
+   pushSubscriptions PushSubscription[]
+
 
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
