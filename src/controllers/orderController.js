@@ -2,6 +2,7 @@ import prisma from "../db.js"
 import { Resend } from "resend"
 import { getIO } from "../utils/socket.js"
 import { redisClient } from "../../redis.js"
+import { messaging } from "../utils/firebaseAdmin.js" // adjust path if firebaseAdmin.js lives elsewhere
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 const invalidateInventoryCache = async (userId, restId) => {
@@ -11,6 +12,60 @@ const invalidateInventoryCache = async (userId, restId) => {
     await redisClient.del(`viewItemCustomer:${restaurant.subdomain}`);
   }
 };
+
+// Sends a push notification to every device subscribed for a restaurant.
+// Inlined here since addOrder is currently the only caller — pull it back
+// out into its own file later if another controller needs to send pushes too.
+const sendRestaurantNotification = async (restId, { title, body, link }) => {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { restId },
+    select: { fcmToken: true },
+  });
+
+  if (subscriptions.length === 0) {
+    console.log(`sendRestaurantNotification: no subscriptions found for restId ${restId}`);
+    return;
+  }
+
+  const tokens = subscriptions.map((s) => s.fcmToken);
+
+  const message = {
+    notification: { title, body },
+    data: link ? { link } : undefined,
+    tokens,
+  };
+
+  const response = await messaging.sendEachForMulticast(message);
+
+  console.log(
+    `sendRestaurantNotification: ${response.successCount} succeeded, ${response.failureCount} failed`,
+  );
+  response.responses.forEach((r, i) => {
+    if (!r.success) {
+      console.log(`  token ${tokens[i].slice(0, 12)}...: ${r.error?.code} — ${r.error?.message}`);
+    }
+  });
+
+  // Clean up tokens that are no longer valid (uninstalled, revoked, etc.)
+  const deadTokens = [];
+  response.responses.forEach((r, i) => {
+    if (!r.success && (
+      r.error?.code === "messaging/registration-token-not-registered" ||
+      r.error?.code === "messaging/invalid-registration-token"
+    )) {
+      deadTokens.push(tokens[i]);
+    }
+  });
+
+  if (deadTokens.length > 0) {
+    await prisma.pushSubscription.deleteMany({
+      where: { fcmToken: { in: deadTokens } },
+    });
+  }
+
+  return response;
+};
+
 const viewOrder = async(req,res,next)=>{
   const {restId} = req.params
   try{
@@ -91,6 +146,18 @@ io.to(add.restId).emit("newOrder", {
   total: add.orderTotal,
   createdAt: add.createdAt,
 });
+
+// Push notification is best-effort — never let it break order placement.
+try {
+  await sendRestaurantNotification(add.restId, {
+    title: "New Order",
+    body: `${add.custName} placed an order for Rs. ${add.orderTotal}`,
+    link: "/live-orders",
+  });
+} catch (err) {
+  console.error("Failed to send push notification for new order:", err);
+}
+
   res.json({message:'order placed'})
   const orderItems = cart
   .map(

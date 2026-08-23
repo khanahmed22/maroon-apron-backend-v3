@@ -1,20 +1,24 @@
-import admin from "firebase-admin";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
 
-// TODO: point this at your actual service account credentials.
-// Easiest options:
-//   1. Download the service account JSON from Firebase Console >
-//      Project Settings > Service Accounts > Generate new private key,
-//      then load it here (keep it OUT of version control / .gitignore it).
-//   2. Or store the JSON contents in an env var (e.g. FIREBASE_SERVICE_ACCOUNT)
-//      and JSON.parse it, which is friendlier for Render/hosting envs
-//      that don't support file uploads.
+// Generate: Firebase Console > Project Settings > Service Accounts >
+// Generate new private key (downloads a JSON file). Then base64-encode
+// the whole file's contents into a single line — this avoids the .env
+// newline/quoting issues that raw multi-line JSON runs into:
+//
+//   Windows (PowerShell):
+//     [Convert]::ToBase64String([IO.File]::ReadAllBytes("path\to\file.json"))
+//
+// Paste that single long string as FIREBASE_SERVICE_ACCOUNT_BASE64 in your
+// .env (and in your host's env vars, e.g. Render). Never commit the raw
+// JSON file to git.
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const serviceAccount = JSON.parse(
+  Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf-8"),
+);
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-}
+const app = getApps().length ? getApps()[0] : initializeApp({
+  credential: cert(serviceAccount),
+});
 
-export default admin;
+export const messaging = getMessaging(app);
