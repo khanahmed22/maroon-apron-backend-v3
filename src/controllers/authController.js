@@ -460,7 +460,7 @@ const logout = async (req, res, next) => {
     res.cookie("jwt","",{
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: "lax",
       path: "/",
       expires: new Date(0)
     })
