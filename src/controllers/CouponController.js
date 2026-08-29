@@ -1,5 +1,19 @@
 import prisma from "../db.js"
+import {z} from 'zod'
 
+const couponValidator = z.object({
+  code: z.string().min(1),
+
+  discountPercentage: z.number().int().min(1).max(100),
+
+  minOrder: z.number().nonnegative(),
+
+  expiry: z.coerce.date(),
+
+  maxUses: z.number().int().positive(),
+
+  maxUsesPerUser: z.number().int().positive(),
+});
 
 const getCoupons=async(req,res,next)=> {
   const { restId } = req.params;
@@ -27,7 +41,7 @@ const createCoupon= async(req, res,next)=> {
     expiry,
     maxUses,
     maxUsesPerUser,
-  } = req.body;
+  } = couponValidator.parse(req.body);
 
   if (!code || discountPercentage === undefined || !expiry) {
     return res.status(400).json({ error: "Missing required fields" });

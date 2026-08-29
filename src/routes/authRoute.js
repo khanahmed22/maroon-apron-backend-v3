@@ -1,4 +1,4 @@
-import express, { Router } from 'express'
+import { Router } from 'express'
 import { registerMerchant,register } from '../controllers/authController.js'
 import { loginMerchant,loginCustomer } from '../controllers/authController.js'
 import { logout } from '../controllers/authController.js'

@@ -86,8 +86,10 @@ model RestList{
   metaDesc String?
   customDomain String? @unique()
   preOrdersEnabled Boolean?
-  preoOrderMinHours Int?
+  preOrderMinHours Int?
   preOrderMaxDays Int?
+  orderingDisabled Boolean @default(false)
+
   pickUpWindows String[] 
   deliveryWindows String[] 
   lat Float?

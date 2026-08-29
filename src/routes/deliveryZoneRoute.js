@@ -1,5 +1,4 @@
-import express,{Router} from 'express'
-import prisma from "../db.js";
+import {Router} from 'express'
 import { protect } from '../authMiddleware/protect.js';
 import { addArea, viewAreas,deleteArea, updateArea } from '../controllers/deliveryController.js';
 

@@ -19,7 +19,6 @@ import accountRouter from './src/routes/accountRoute.js'
 import forgotPasswordRouter from './src/routes/forgotPassword.js'
 import resetPasswordRouter from './src/routes/resetPassword.js'
 import subRouter from './src/routes/subdomainRoute.js'
-import domainRouter from './src/routes/requestDomain.js'
 import { rateLimiter } from './src/redisLimitware/redisLimit.js'
 import deliveryRouter from './src/routes/deliveryZoneRoute.js'
 import analyticsRouter from './src/routes/analyticsRoute.js'
@@ -29,6 +28,10 @@ import errorMiddleware from './src/errorMiddleware/errorMiddleware.js'
 import netlifyRouter from './src/routes/netlifyRoute.js'
 import menuScanRouter from './src/routes/menuScanRoute.js'
 import firebaseNotif from './src/routes/firebaseRoute.js'
+
+import "./src/jobs/cleanupPasswordResetTokens.js";
+import "./src/jobs/cleanupCouponCode.js"
+
 dotenv.config()
 
 async function isAllowedOrigin(origin) {
@@ -119,11 +122,7 @@ app.use(
 
 app.use('/restaurant', rateLimiter(100, 60), subRouter)
 
-app.use(
-  '/request-custom-domain',
-  rateLimiter(10, 60),
-  domainRouter
-)
+
 
 
 

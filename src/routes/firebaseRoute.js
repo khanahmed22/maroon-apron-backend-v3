@@ -1,3 +1,4 @@
+//
 import { Router } from "express";
 import { subscribeToNotifications,getNotificationStatus } from "../controllers/firebaseNotification.js";
 import { protect } from '../authMiddleware/protect.js';

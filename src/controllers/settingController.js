@@ -32,7 +32,7 @@ const updateRestaurantSettings = async (req, res, next) => {
       logoId,
       bannerId,
       preOrdersEnabled,
-      preoOrderMinHours,
+      preOrderMinHours,
       preOrderMaxDays,
       pickUpWindows,
       deliveryWindows,
@@ -40,6 +40,7 @@ const updateRestaurantSettings = async (req, res, next) => {
       long,
       crimsonBranding,
       subdomain,
+      orderingDisabled
     } = req.body;
 
     // Get existing restaurant + plan in a single query now that the
@@ -167,7 +168,7 @@ const updateRestaurantSettings = async (req, res, next) => {
         customDomain: finalCustomDomain,
         restSite,
         preOrdersEnabled,
-        preoOrderMinHours,
+        preOrderMinHours,
         preOrderMaxDays,
         pickUpWindows,
         deliveryWindows,
@@ -175,6 +176,8 @@ const updateRestaurantSettings = async (req, res, next) => {
         long,
         crimsonBranding,
         subdomain: finalSubdomain,
+        orderingDisabled
+
       },
     });
 

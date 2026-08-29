@@ -1,103 +1,12 @@
 import { Router } from "express";
-import prisma from "../db.js";
-import crypto from "crypto";
-import bcrypt from "bcryptjs";
+import { verifyTokenController,resetPasswordController } from "../controllers/resetPasswordController.js";
 
 const resetPasswordRouter = Router();
 
-/**
- * Verify reset token
- * GET /reset-password/:token
- */
-resetPasswordRouter.get("/:token", async (req, res,next) => {
-  const { token } = req.params;
 
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
+resetPasswordRouter.get("/:token", verifyTokenController);
 
-  try {
-    const resetToken = await prisma.passwordResetToken.findFirst({
-      where: {
-        token: hashedToken,
-        expiresAt: {
-          gt: new Date(),
-        },
-      },
-    });
 
-    if (!resetToken) {
-      return res.status(400).json({
-        valid: false,
-        error: "Invalid or expired token",
-      });
-    }
-
-    return res.json({
-      valid: true,
-    });
-  } catch (err) {
-   err.status = 500
-    next(err)
-
-  }
-});
-
-/**
- * Reset password
- * POST /reset-password
- */
-resetPasswordRouter.post("/", async (req, res,next) => {
-  const { password, token } = req.body;
-
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
-
-  try {
-    const resetToken = await prisma.passwordResetToken.findFirst({
-      where: {
-        token: hashedToken,
-        expiresAt: {
-          gt: new Date(),
-        },
-      },
-    });
-
-    if (!resetToken) {
-      return res.status(400).json({
-        error: "Invalid or expired token",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await prisma.user.update({
-      where: {
-        id: resetToken.userId,
-      },
-      data: {
-        password: hashedPassword,
-      },
-    });
-
-    await prisma.passwordResetToken.delete({
-      where: {
-        id: resetToken.id,
-      },
-    });
-
-    return res.json({
-      success: true,
-      message: "Password updated successfully.",
-    });
-  } catch (err) {
-    err.status = 500
-    next(err)
-
-  }
-});
+resetPasswordRouter.post("/", resetPasswordController );
 
 export default resetPasswordRouter;

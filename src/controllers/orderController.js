@@ -152,7 +152,7 @@ try {
   await sendRestaurantNotification(add.restId, {
     title: "New Order",
     body: `${add.custName} placed an order for Rs. ${add.orderTotal}`,
-    link: "/live-orders",
+    link: "/orders",
   });
 } catch (err) {
   console.error("Failed to send push notification for new order:", err);
@@ -250,7 +250,7 @@ try {
       <hr style="margin:30px 0;">
 
       <p style="font-size:14px;color:#666;">
-        If you have any questions about your order, simply reply to this email.
+        If you have any questions about your order, simply reply to this email .
       </p>
 
       <p style="margin-top:30px;">
