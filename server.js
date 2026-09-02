@@ -28,6 +28,7 @@ import errorMiddleware from './src/errorMiddleware/errorMiddleware.js'
 import netlifyRouter from './src/routes/netlifyRoute.js'
 import menuScanRouter from './src/routes/menuScanRoute.js'
 import firebaseNotif from './src/routes/firebaseRoute.js'
+import deleteAccountRouter from './src/routes/deleteAccountRoute.js'
 
 import "./src/jobs/cleanupPasswordResetTokens.js";
 import "./src/jobs/cleanupCouponCode.js"
@@ -132,6 +133,9 @@ app.use(
   fixRouter
 )
 app.use("/menu-scan",menuScanRouter);
+
+app.use("/delete-account", rateLimiter(30, 60),deleteAccountRouter);
+
 
 
 app.use("/api/netlify",rateLimiter(300, 60), netlifyRouter);
