@@ -262,35 +262,54 @@ const verifyEmail = async (req, res, next) => {
         to: user.email,
         subject: "Welcome to Crimson Castle",
         html: `
-          <h2>Welcome ${user.name}! 🎉</h2>
+  <h2>Welcome ${user.name}! 🎉</h2>
 
-          <p>
-            Your email has been successfully verified and your
-            Crimson Castle account is now ready.
-          </p>
+  <p>
+    Your email has been successfully verified and your
+    Crimson Castle account is now ready.
+  </p>
 
-          <p>
-            We're glad to have you here. Let's get you started.
-          </p>
+  <p>
+    We're glad to have you here. To get started with Crimson Castle,
+    check out our Knowledge Base for helpful guides and information
+    on getting the most out of your account.
+  </p>
 
-          <a
-            href="${process.env.CRIMSON_ADMIN_URL}/login"
-            style="
-              display:inline-block;
-              padding:12px 20px;
-              background:#000;
-              color:#fff;
-              text-decoration:none;
-              border-radius:6px;
-            "
-          >
-            Login to Crimson Castle
-          </a>
+  <a
+    href="${process.env.CRIMSON_ADMIN_URL}/login"
+    style="
+      display:inline-block;
+      padding:12px 20px;
+      background:#000;
+      color:#fff;
+      text-decoration:none;
+      border-radius:6px;
+      margin-right:8px;
+    "
+  >
+    Login to Crimson Castle
+  </a>
 
-          <p style="margin-top:24px;">
-            If you didn't create this account, you can safely ignore this email.
-          </p>
-        `
+  <a
+    href="${process.env.CRIMSON_ADMIN_URL}/knowledge-base"
+    style="
+      display:inline-block;
+      padding:12px 20px;
+      background:#f3f4f6;
+      color:#000;
+      text-decoration:none;
+      border-radius:6px;
+    "
+  >
+    Knowledge Base
+  </a>
+
+  <p style="margin-top:24px;">
+    If you didn't create this account, you can safely ignore this email.
+  </p>
+`
+
+
       });
     } catch (emailError) {
       // Don't undo successful email verification just because

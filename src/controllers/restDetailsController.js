@@ -37,6 +37,8 @@ const customerFacingRestDetails = async (req, res, next) => {
         long: true,
         crimsonBranding: true,
         orderingDisabled:true,
+        pickupEnabled:true,
+        deliveryEnabled:true
       },
     });
 
@@ -84,7 +86,9 @@ const merchantFacingRestDetails = async(req,res)=>{
     lat:true,
     long:true,
     crimsonBranding:true,
-    orderingDisabled:true
+    orderingDisabled:true,
+    pickupEnabled:true,
+    deliveryEnabled:true
 
   },
   }) 

@@ -40,7 +40,9 @@ const updateRestaurantSettings = async (req, res, next) => {
       long,
       crimsonBranding,
       subdomain,
-      orderingDisabled
+      orderingDisabled,
+      pickupEnabled,
+      deliveryEnabled
     } = req.body;
 
     // Get existing restaurant + plan in a single query now that the
@@ -176,7 +178,9 @@ const updateRestaurantSettings = async (req, res, next) => {
         long,
         crimsonBranding,
         subdomain: finalSubdomain,
-        orderingDisabled
+        orderingDisabled,
+         pickupEnabled,
+      deliveryEnabled
 
       },
     });
