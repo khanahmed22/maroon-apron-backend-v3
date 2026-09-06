@@ -16,6 +16,9 @@ export function initSocket(server) {
             return callback(null, true);
           }
 
+           // Capacitor Android app
+  if (origin === "https://localhost") return true
+
           // Any *.localhost:3001
           if (
             url.hostname.endsWith(".localhost") &&
