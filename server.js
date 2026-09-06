@@ -40,6 +40,9 @@ async function isAllowedOrigin(origin) {
 
   if (origin === process.env.CRIMSON_ADMIN_URL) return true
 
+   // Capacitor Android app
+  if (origin === "https://localhost") return true
+
   if (
     url.hostname.endsWith('.localhost') &&
     url.port === '3001'
