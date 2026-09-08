@@ -27,7 +27,7 @@ export function initSocket(server) {
             return callback(null, true);
           }
 
-          // Production Crimson Castle subdomains
+          // Production Maroon Apron subdomains
           if (url.hostname.endsWith(process.env.CRIMSON_HOSTNAME)) {
             return callback(null, true);
           }

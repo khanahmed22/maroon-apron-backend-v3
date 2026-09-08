@@ -97,7 +97,7 @@ const registerMerchant = async (req, res, next) => {
     to: `${process.env.ADMIN_EMAIL}`,
     subject: "NEW MERCHANT SIGNED UP",
     html: `
-      <h2>A new merchant signed up at Crimson Castle</h2>
+      <h2>A new merchant signed up at Maroon Apron</h2>
       <p>Merchant ID: ${user.id}</p>
       <p>Merchant Name: ${user.name}</p>
       <p>Merchant Email: ${user.email}</p>
@@ -260,17 +260,17 @@ const verifyEmail = async (req, res, next) => {
       await resend.emails.send({
         from: "onboarding@crimsoncastle.shop",
         to: user.email,
-        subject: "Welcome to Crimson Castle",
+        subject: "Welcome to Maroon Apron",
         html: `
   <h2>Welcome ${user.name}! 🎉</h2>
 
   <p>
     Your email has been successfully verified and your
-    Crimson Castle account is now ready.
+    Maroon Apron account is now ready.
   </p>
 
   <p>
-    We're glad to have you here. To get started with Crimson Castle,
+    We're glad to have you here. To get started with Maroon Apron,
     check out our Knowledge Base for helpful guides and information
     on getting the most out of your account.
   </p>
@@ -287,7 +287,7 @@ const verifyEmail = async (req, res, next) => {
       margin-right:8px;
     "
   >
-    Login to Crimson Castle
+    Login to Maroon Apron
   </a>
 
   <a

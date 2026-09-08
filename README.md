@@ -1,6 +1,6 @@
-# Crimson Castle Backend
+# Maroon Apron Backend
 
-The backend API for **Crimson Castle**, powering both the **Admin Dashboard** and **Client App**.
+The backend API for **Maroon Apron**, powering both the **Admin Dashboard** and **Client App**.
 
 ## 🚀 Tech Stack
 
@@ -18,18 +18,18 @@ The backend API for **Crimson Castle**, powering both the **Admin Dashboard** an
 
 The administration dashboard used to manage restaurants, menus, orders, inventory, and other business operations.
 
-[Crimson Castle Admin App](https://github.com/khanahmed22/crimson-admin-v3)
+[Maroon Apron Admin App](https://github.com/khanahmed22/crimson-admin-v3)
 
 ### Client App
 
 The customer-facing application used to browse menus and place orders.
 
-[Crimson Castle Client App](https://github.com/khanahmed22/crimson-next-v3)
+[Maroon Apron Client App](https://github.com/khanahmed22/crimson-next-v3)
 
 
 ## Main Responsibilities
 
-The backend handles core Crimson Castle functionality, including:
+The backend handles core Maroon Apron functionality, including:
 
 - Authentication and authorization
 - Restaurant and merchant management
