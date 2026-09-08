@@ -17,7 +17,7 @@ export function initSocket(server) {
           }
 
            // Capacitor Android app
-  if (origin === "https://android.crimsoncastle.biz") return true
+  if (origin === "https://android.maroonapron.com") return true
 
           // Any *.localhost:3001
           if (
