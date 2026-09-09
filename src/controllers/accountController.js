@@ -2,11 +2,11 @@ import prisma from "../db.js";
 
 const CRIMSON_BASE_DOMAIN = "crimsoncastle.shop";
 
-const accountController = async (req, res,next) => {
+// Paddle
+
+const paddleAccountController = async (req, res, next) => {
   try {
-
     const user = await prisma.user.findUnique({
-
       where: {
         id: req.user.id,
       },
@@ -14,23 +14,18 @@ const accountController = async (req, res,next) => {
       select: {
         email: true,
         plan: true,
-        subscription_id: true,
-        
+        paddleSubscription_id: true,
       },
-
     });
 
     res.json(user);
-
   } catch (err) {
- err.status = 404
-    next(err)
-
-    
+    err.status = 404;
+    next(err);
   }
-}
+};
 
-const createPaddleLink = async (req, res,next) => {
+const createPaddleLink = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -62,21 +57,21 @@ const createPaddleLink = async (req, res,next) => {
           "Paddle-Version": "1",
         },
         body: JSON.stringify({}),
-      }
+      },
     );
 
     const result = await paddleRes.json();
 
     if (!paddleRes.ok) {
-  console.error("❌ Paddle portal session failed");
-  console.error("Status:", paddleRes.status);
-  console.error("Response:", JSON.stringify(result, null, 2));
+      console.error("❌ Paddle portal session failed");
+      console.error("Status:", paddleRes.status);
+      console.error("Response:", JSON.stringify(result, null, 2));
 
-  return res.status(paddleRes.status).json({
-    error: "Failed to create portal session",
-    paddle: result,
-  });
-}
+      return res.status(paddleRes.status).json({
+        error: "Failed to create portal session",
+        paddle: result,
+      });
+    }
 
     const url = result.data?.urls?.general?.overview;
 
@@ -88,11 +83,10 @@ const createPaddleLink = async (req, res,next) => {
 
     res.json({ url });
   } catch (err) {
-     err.status = 404
-    next(err)
-
+    err.status = 404;
+    next(err);
   }
-}
+};
 
 const removeNetlifyAlias = async (domain) => {
   try {
@@ -111,7 +105,7 @@ const removeNetlifyAlias = async (domain) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     const siteData = await siteResponse.json();
@@ -138,7 +132,7 @@ const removeNetlifyAlias = async (domain) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ domain_aliases: domainAliases }),
-      }
+      },
     );
 
     if (!updateResponse.ok) {
@@ -150,7 +144,7 @@ const removeNetlifyAlias = async (domain) => {
   }
 };
 
-const paddleWebhook = async (req, res,next) => {
+const paddleWebhook = async (req, res, next) => {
   try {
     console.log("🔥 WEBHOOK RECEIVED");
     console.log(JSON.stringify(req.body, null, 2));
@@ -180,7 +174,7 @@ const paddleWebhook = async (req, res,next) => {
           },
           data: {
             plan: "pro",
-            subscription_id: data.id,
+            paddleSubscription_id: data.id,
             paddleCustomerId: data.customer_id,
           },
         });
@@ -232,9 +226,15 @@ const paddleWebhook = async (req, res,next) => {
 
     res.sendStatus(200);
   } catch (err) {
-  console.error("Paddle webhook error:", err);
-  next(err);
-}
-}
+    console.error("Paddle webhook error:", err);
+    next(err);
+  }
+};
 
-export {accountController,createPaddleLink,paddleWebhook}
+
+
+// Google Play
+
+
+
+export { paddleAccountController, createPaddleLink, paddleWebhook };
