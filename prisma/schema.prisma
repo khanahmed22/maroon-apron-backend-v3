@@ -16,8 +16,17 @@ model User {
   role                  String
   subdomain             String?
   plan                  String               @default("free")
+
+  // paddle
   paddleSubscription_id String?
   paddleCustomerId      String?
+
+  // revenuecat/google
+  revenueCatAppUserId   String?
+
+  billingProvider       String? // "paddle" | "googleplay" | null
+
+
   areaList              AreaList[]
   fixedRate             FixedRate?
   inventory             Inventory[]

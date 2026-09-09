@@ -15,7 +15,7 @@ import orderByUserIdRouter from './src/routes/getOrderByUserIdRoute.js'
 import custRouter from './src/routes/getCustomers.js'
 import http from 'http'
 import { initSocket } from './src/utils/socket.js'
-import accountRouter from './src/routes/accountRoute.js'
+import paddleAccountRouter from './src/routes/paddleAccountRoute.js'
 import forgotPasswordRouter from './src/routes/forgotPassword.js'
 import resetPasswordRouter from './src/routes/resetPassword.js'
 import subRouter from './src/routes/subdomainRoute.js'
@@ -29,6 +29,7 @@ import netlifyRouter from './src/routes/netlifyRoute.js'
 import menuScanRouter from './src/routes/menuScanRoute.js'
 import firebaseNotif from './src/routes/firebaseRoute.js'
 import deleteAccountRouter from './src/routes/deleteAccountRoute.js'
+import revenueCatRouter from './src/routes/revenueCatRoute.js'
 
 import "./src/jobs/cleanupPasswordResetTokens.js";
 import "./src/jobs/cleanupCouponCode.js"
@@ -104,8 +105,8 @@ app.use('/settings', rateLimiter(50, 60), settingRouter)
 app.use('/order-placed', rateLimiter(20, 60), publicOrderRouter)
 app.use('/customers', rateLimiter(50, 60), custRouter)
 
-app.use('/account', rateLimiter(300, 60), accountRouter)
-
+app.use('/account', rateLimiter(300, 60), paddleAccountRouter)
+app.use('/account-google',rateLimiter(300, 60),revenueCatRouter)
 app.use('/area-list',rateLimiter(100, 60),deliveryRouter)
 
 app.use('/analytics', rateLimiter(50, 60), analyticsRouter)

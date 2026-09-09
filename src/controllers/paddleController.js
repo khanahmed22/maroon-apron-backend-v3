@@ -15,6 +15,7 @@ const paddleAccountController = async (req, res, next) => {
         email: true,
         plan: true,
         paddleSubscription_id: true,
+        billingProvider: true,
       },
     });
 
@@ -33,8 +34,15 @@ const createPaddleLink = async (req, res, next) => {
       },
       select: {
         paddleCustomerId: true,
+        billingProvider: true,
       },
     });
+
+    if (user?.billingProvider === "googleplay") {
+      return res.status(409).json({
+        error: "Already subscribed through Google Play. Cancel that subscription first to switch billing methods.",
+      });
+    }
 
     if (!user?.paddleCustomerId) {
       return res.status(404).json({
@@ -176,6 +184,7 @@ const paddleWebhook = async (req, res, next) => {
             plan: "pro",
             paddleSubscription_id: data.id,
             paddleCustomerId: data.customer_id,
+            billingProvider: "paddle",
           },
         });
 
@@ -189,6 +198,7 @@ const paddleWebhook = async (req, res, next) => {
           },
           data: {
             plan: "free",
+            billingProvider: null,
           },
         });
 
