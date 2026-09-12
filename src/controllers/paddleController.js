@@ -1,8 +1,7 @@
 import prisma from "../db.js";
+import { removeNetlifyAlias } from "../services/netlify.js";
 
 const CRIMSON_BASE_DOMAIN = "crimsoncastle.shop";
-
-// Paddle
 
 const paddleAccountController = async (req, res, next) => {
   try {
@@ -10,7 +9,6 @@ const paddleAccountController = async (req, res, next) => {
       where: {
         id: req.user.id,
       },
-
       select: {
         email: true,
         plan: true,
@@ -96,62 +94,6 @@ const createPaddleLink = async (req, res, next) => {
   }
 };
 
-const removeNetlifyAlias = async (domain) => {
-  try {
-    const siteId = process.env.NETLIFY_SITE_ID;
-    const token = process.env.NETLIFY_AUTH_TOKEN;
-
-    if (!siteId || !token) {
-      console.error("Netlify configuration is missing, skipping alias removal");
-      return;
-    }
-
-    const siteResponse = await fetch(
-      `https://api.netlify.com/api/v1/sites/${siteId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    const siteData = await siteResponse.json();
-
-    if (!siteResponse.ok) {
-      console.error("Failed to fetch Netlify site for alias removal", siteData);
-      return;
-    }
-
-    const currentAliases = siteData.domain_aliases || [];
-    const domainAliases = currentAliases.filter((d) => d !== domain);
-
-    if (domainAliases.length === currentAliases.length) {
-      // domain wasn't in the alias list, nothing to do
-      return;
-    }
-
-    const updateResponse = await fetch(
-      `https://api.netlify.com/api/v1/sites/${siteId}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ domain_aliases: domainAliases }),
-      },
-    );
-
-    if (!updateResponse.ok) {
-      const updatedSite = await updateResponse.json();
-      console.error("Failed to remove Netlify alias", updatedSite);
-    }
-  } catch (err) {
-    console.error("Error removing Netlify alias", err);
-  }
-};
-
 const paddleWebhook = async (req, res, next) => {
   try {
     console.log("🔥 WEBHOOK RECEIVED");
@@ -191,7 +133,22 @@ const paddleWebhook = async (req, res, next) => {
         console.log(`✅ User ${userId} upgraded to Pro`);
         break;
 
-      case "subscription.canceled":
+      case "subscription.canceled": {
+        // Guard against a stale/duplicate cancellation arriving after the
+        // user already switched to Google Play — don't let it clobber an
+        // active subscription on the other provider.
+        const existing = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { billingProvider: true },
+        });
+
+        if (existing?.billingProvider !== "paddle") {
+          console.log(
+            `ℹ️ Ignoring stale Paddle cancellation for ${userId} — current provider is ${existing?.billingProvider}`
+          );
+          return res.sendStatus(200);
+        }
+
         await prisma.user.update({
           where: {
             id: userId,
@@ -229,6 +186,7 @@ const paddleWebhook = async (req, res, next) => {
         }
 
         break;
+      }
 
       default:
         console.log(`ℹ️ Ignored event: ${event}`);
@@ -240,11 +198,5 @@ const paddleWebhook = async (req, res, next) => {
     next(err);
   }
 };
-
-
-
-// Google Play
-
-
 
 export { paddleAccountController, createPaddleLink, paddleWebhook };
