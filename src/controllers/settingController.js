@@ -1,5 +1,6 @@
 import prisma from "../db.js";
 import cloudinary from "../../config/cloudinary.js";
+import { redisClient } from "../../redis.js";
 
 const CRIMSON_BASE_DOMAIN = "crimsoncastle.shop";
 
@@ -184,6 +185,21 @@ const updateRestaurantSettings = async (req, res, next) => {
 
       },
     });
+
+    await redisClient.del(`restId:${existingRestaurant.userId}`);
+    await redisClient.del(`restDetails:merchant:${existingRestaurant.userId}`);
+    await redisClient.del(`restDetails:customer:${finalSubdomain}`);
+
+    // finalSubdomain is locked after first-time setup, but if this was the
+    // setup call itself, existingRestaurant.subdomain (old, empty) differs
+    // from finalSubdomain (new) — nothing to clean up there since it was
+    // never cached under the old (empty) value. Guard anyway for safety.
+    if (
+      existingRestaurant.subdomain &&
+      existingRestaurant.subdomain !== finalSubdomain
+    ) {
+      await redisClient.del(`restDetails:customer:${existingRestaurant.subdomain}`);
+    }
 
     return res.status(200).json({
       success: true,

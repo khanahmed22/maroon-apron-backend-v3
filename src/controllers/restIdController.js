@@ -1,27 +1,36 @@
 import prisma from "../db.js";
+import { redisClient } from "../../redis.js";
 
-export const restIdController = async(req,res,next)=>{
+export const restIdController = async (req, res, next) => {
+  const userId = req.user.id;
+  const cacheKey = `restId:${userId}`;
 
-  
-  const userId = req.user.id
+  try {
+    const cachedRestId = await redisClient.get(cacheKey);
 
-  try{
-     const getId = await prisma.restList.findUnique({
-    where:{userId:userId }
-  })
+    if (cachedRestId) {
+      return res.json({
+        getId: JSON.parse(cachedRestId),
+        source: "redis",
+      });
+    }
 
-  if(!getId){
-    res.json('no restaurant owner found')
+    const getId = await prisma.restList.findUnique({
+      where: { userId: userId },
+    });
+
+    if (!getId) {
+      return res.json({ getId: null });
+    }
+
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(getId));
+
+    return res.json({
+      getId,
+      source: "database",
+    });
+  } catch (err) {
+    err.status = 404;
+    next(err);
   }
-
-  return res.json({
-    getId
-  })
-  }
-  catch(err){
-    err.status = 404
-    next(err)
-
-  }
- 
-}
+};

@@ -55,10 +55,14 @@ const menuScanController =  async (req, res) => {
       },
     });
 
-    const rest = user?.restList?.[0];
+    const rest = user?.restList;
 
     if (!rest) {
       return res.status(403).json({ error: "No restaurant found for this account", items: [] });
+    }
+
+    if(user.plan === "free"){
+      return res.status(400).json({error:"Upgrade to Pro to use AI features"})
     }
 
     const limit = PLAN_LIMITS[user.plan] ?? 0;
