@@ -17,8 +17,9 @@ export function initSocket(server) {
           }
 
            // Capacitor Android app
-  if (origin === "https://android.maroonapron.com") return true
-
+ if (origin === "https://android.maroonapron.com") {
+  return callback(null, true);
+}
           // Any *.localhost:3001
           if (
             url.hostname.endsWith(".localhost") &&
@@ -47,6 +48,11 @@ export function initSocket(server) {
     socket.on("joinRestaurant", (restId) => {
       socket.join(restId);
       console.log(`${socket.id} joined ${restId}`);
+    });
+
+    socket.on("leaveRestaurant", (restId) => {
+      socket.leave(restId);
+      console.log(`${socket.id} left ${restId}`);
     });
 
     socket.on("disconnect", () => {
