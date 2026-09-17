@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import prisma from "../db.js";
 
-cron.schedule("*/10 * * * *", async () => {
+cron.schedule("0 * * * *", async () => { // 1 hour
   try {
     const result = await prisma.passwordResetToken.deleteMany({
       where: {
