@@ -28,16 +28,22 @@ const revenueCatWebhook = async (req, res, next) => {
     // Read the secret at request time, not module load time. With ES modules,
     // imports are evaluated before dotenv.config() runs in the entry file, so
     // a module-level constant can capture `undefined`.
-    const secret = process.env.REVENUECAT_WEBHOOK_SECRET;
-    const authHeader = req.headers["authorization"];
+    const secret = process.env.REVENUECAT_WEBHOOK_SECRET
+  ?.trim()
+  .replace(/^["']|["']$/g, "")
+  .replace(/^Bearer\s+/i, "");
 
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      console.warn("RevenueCat webhook rejected", {
-        hasSecret: Boolean(secret),
-        hasHeader: Boolean(authHeader),
-      });
-      return res.sendStatus(401);
-    }
+const provided = req.headers["authorization"]
+  ?.trim()
+  .replace(/^Bearer\s+/i, "");
+
+if (!secret || provided !== secret) {
+  console.warn("RevenueCat webhook rejected", {
+    secretLen: secret?.length,
+    providedLen: provided?.length,
+  });
+  return res.sendStatus(401);
+}
 
     const event = req.body.event;
     if (!event) return res.sendStatus(400);
