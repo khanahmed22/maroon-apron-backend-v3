@@ -43,7 +43,7 @@ const updateRestaurantSettings = async (req, res, next) => {
       subdomain,
       orderingDisabled,
       pickupEnabled,
-      deliveryEnabled
+      deliveryEnabled,
     } = req.body;
 
     // Get existing restaurant + plan in a single query now that the
@@ -121,7 +121,8 @@ const updateRestaurantSettings = async (req, res, next) => {
       }
     }
 
-    const isPro = existingRestaurant.user?.plan && existingRestaurant.user.plan !== "free";
+    const isPro =
+      existingRestaurant.user?.plan && existingRestaurant.user.plan !== "free";
 
     // restSite is the canonical "visit store" URL — custom domain when on
     // Pro and one is set, otherwise the crimsoncastle.shop subdomain.
@@ -148,7 +149,8 @@ const updateRestaurantSettings = async (req, res, next) => {
       await cloudinary.uploader.destroy(existingRestaurant.bannerId);
     }
 
-    // Update restaurant
+    // Update restaurant. On first-time setup, User.subdomain is written via a
+    // nested update so both tables change in the same transaction.
     const restaurant = await prisma.restList.update({
       where: {
         id,
@@ -180,9 +182,14 @@ const updateRestaurantSettings = async (req, res, next) => {
         crimsonBranding,
         subdomain: finalSubdomain,
         orderingDisabled,
-         pickupEnabled,
-      deliveryEnabled
+        pickupEnabled,
+        deliveryEnabled,
 
+        // Keep User.subdomain in sync when setup completes
+        ...(isFirstTimeSetup &&
+          finalSubdomain && {
+            user: { update: { subdomain: finalSubdomain } },
+          }),
       },
     });
 
@@ -198,7 +205,9 @@ const updateRestaurantSettings = async (req, res, next) => {
       existingRestaurant.subdomain &&
       existingRestaurant.subdomain !== finalSubdomain
     ) {
-      await redisClient.del(`restDetails:customer:${existingRestaurant.subdomain}`);
+      await redisClient.del(
+        `restDetails:customer:${existingRestaurant.subdomain}`
+      );
     }
 
     return res.status(200).json({
@@ -207,13 +216,7 @@ const updateRestaurantSettings = async (req, res, next) => {
       restaurant,
     });
   } catch (err) {
-    err.status = 404;
     next(err);
-
-    return res.status(500).json({
-      success: false,
-      error: "Failed to update restaurant",
-    });
   }
 };
 
