@@ -2,7 +2,6 @@ import prisma from "../db.js";
 import { removeNetlifyAlias } from "../services/netlify.js";
 
 const CRIMSON_BASE_DOMAIN = "crimsoncastle.shop";
-const REVENUECAT_WEBHOOK_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET;
 
 const checkGooglePlayEligibility = async (req, res, next) => {
   try {
@@ -26,8 +25,17 @@ const checkGooglePlayEligibility = async (req, res, next) => {
 
 const revenueCatWebhook = async (req, res, next) => {
   try {
+    // Read the secret at request time, not module load time. With ES modules,
+    // imports are evaluated before dotenv.config() runs in the entry file, so
+    // a module-level constant can capture `undefined`.
+    const secret = process.env.REVENUECAT_WEBHOOK_SECRET;
     const authHeader = req.headers["authorization"];
-    if (authHeader !== `Bearer ${REVENUECAT_WEBHOOK_SECRET}`) {
+
+    if (!secret || authHeader !== `Bearer ${secret}`) {
+      console.warn("RevenueCat webhook rejected", {
+        hasSecret: Boolean(secret),
+        hasHeader: Boolean(authHeader),
+      });
       return res.sendStatus(401);
     }
 
@@ -39,6 +47,10 @@ const revenueCatWebhook = async (req, res, next) => {
       console.log("❌ Missing app_user_id in RevenueCat event");
       return res.sendStatus(400);
     }
+
+    console.log(
+      `📩 RevenueCat ${event.type} for ${userId} (${event.environment})`
+    );
 
     switch (event.type) {
       case "INITIAL_PURCHASE":
@@ -69,9 +81,11 @@ const revenueCatWebhook = async (req, res, next) => {
         break;
       }
 
-      case "CANCELLATION":
+      // CANCELLATION only means auto-renew was turned off — the user has
+      // still paid for the current period. EXPIRATION is when access
+      // actually ends, so that is the only event that downgrades.
       case "EXPIRATION": {
-        // Same guard as the Paddle side — ignore a stale cancellation if the
+        // Same guard as the Paddle side — ignore a stale expiration if the
         // user has since moved to Paddle.
         const existing = await prisma.user.findUnique({
           where: { id: userId },
@@ -80,7 +94,7 @@ const revenueCatWebhook = async (req, res, next) => {
 
         if (existing?.billingProvider !== "googleplay") {
           console.log(
-            `ℹ️ Ignoring stale RevenueCat cancellation for ${userId} — current provider is ${existing?.billingProvider}`
+            `ℹ️ Ignoring stale RevenueCat expiration for ${userId} — current provider is ${existing?.billingProvider}`
           );
           return res.sendStatus(200);
         }
