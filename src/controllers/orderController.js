@@ -106,7 +106,7 @@ const addOrder = async(req,res,next)=>{
           restName: custDetails.restName,
           deliveryArea: custDetails.deliveryArea,
           deliveryFee: custDetails.deliveryFee,
-
+          paymentMethod: custDetails.paymentMethod,
           couponId: coupon?.couponId ?? null,
           couponCode: coupon?.code ?? null,
           discountAmount: coupon?.discount ?? 0,

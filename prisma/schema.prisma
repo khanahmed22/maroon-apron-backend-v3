@@ -179,6 +179,7 @@ model Orders {
   isPreOrder      Boolean?
   scheduledDate   DateTime?
   scheduledWindow String?
+  paymentMethod String @default("cash")
   coupon          Coupon?   @relation(fields: [couponId], references: [id])
   restlist        RestList  @relation(fields: [restId], references: [id], onDelete: Cascade)
 }
