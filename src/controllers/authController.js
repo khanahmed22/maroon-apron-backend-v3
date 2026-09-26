@@ -5,6 +5,9 @@ import jwt from "jsonwebtoken"
 import { verificationToken } from "../utils/emailToken.js"
 import { Resend } from "resend"
 import {z} from 'zod'
+import { OAuth2Client } from "google-auth-library"
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 const registerSchemaMerchant = z.object({
   name: z.string().min(3),
@@ -64,7 +67,8 @@ const registerMerchant = async (req, res, next) => {
         name,
         email,
         password: hashedPassword,
-        role
+        role,
+        authProvider: "local", 
       }
     })
 
@@ -115,9 +119,10 @@ const registerMerchant = async (req, res, next) => {
   }
 }
 
+
 //register logic for customer
 
-const register = async (req, res, next) => {
+const registerCustomer = async (req, res, next) => {
   try {
     const {name,email,password,role,subdomain} = registerSchemaCustomer.parse(req.body)
 
@@ -146,7 +151,8 @@ const register = async (req, res, next) => {
         email,
         password: hashedPassword,
         role,
-        subdomain
+        subdomain,
+        authProvider: "local", 
 
       }
     })
@@ -355,6 +361,10 @@ const loginMerchant = async (req, res, next) => {
       })
     }
 
+    if(user.authProvider !== 'local' || !user.password){
+      return res.status(400).json({error: `This account was created with Google. Please use "Sign in with Google" instead.`})
+    }
+
     //verify password
 
     const isPasswordValid = await bcrypt.compare(password,user.password)
@@ -426,6 +436,10 @@ const loginCustomer = async (req, res, next) => {
       })
     }
 
+    if(user.authProvider !== 'local' || !user.password){
+      return res.status(400).json({error: `This account was created with Google. Please use "Sign in with Google" instead.`})
+    }
+
     //verify password
 
     const isPasswordValid = await bcrypt.compare(password,user.password)
@@ -463,6 +477,225 @@ const loginCustomer = async (req, res, next) => {
     next(err)
   }
 }
+
+// Google 
+
+// Register
+
+const googleRegisterMerchant = async (req, res, next) => {
+  try {
+    const { idToken } = req.body
+
+    if (!idToken) {
+      return res.status(400).json({ error: "idToken is required" })
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+    const payload = ticket.getPayload()
+
+    if (!payload.email_verified) {
+      return res.status(400).json({ error: "Google account email is not verified" })
+    }
+
+    const { sub: googleId, email, name } = payload
+
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, authProvider: true }
+    })
+
+    if (existing) {
+      const message = existing.authProvider === "local"
+        ? "This email already has a password account. Please log in with your email and password instead."
+        : "An account with this email already exists. Please log in with Google instead."
+      return res.status(409).json({ error: message })
+    }
+
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          role: "merchant",
+          authProvider: "google",
+          googleId,
+          isVerified: true,
+          password: null,
+        }
+      })
+
+      await tx.restList.create({ data: { userId: newUser.id } })
+
+      return newUser
+    })
+
+    const token = generateToken(user.id, res)
+    return res.status(201).json({
+      status: "success",
+      data: { user: { id: user.id, email: user.email }, token }
+    })
+
+  } catch (err) {
+    err.status = 400
+    next(err)
+  }
+}
+
+
+
+const googleRegisterCustomer = async (req, res, next) => {
+  try {
+    const { idToken, subdomain } = req.body
+
+    if (!idToken || !subdomain) {
+      return res.status(400).json({ error: "idToken and subdomain are required" })
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+    const payload = ticket.getPayload()
+
+    if (!payload.email_verified) {
+      return res.status(400).json({ error: "Google account email is not verified" })
+    }
+
+    const { sub: googleId, email, name } = payload
+
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, authProvider: true }
+    })
+
+    if (existing) {
+      const message = existing.authProvider === "local"
+        ? "This email already has a password account. Please log in with your email and password instead."
+        : "An account with this email already exists. Please log in with Google instead."
+      return res.status(409).json({ error: message })
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        role: "customer",
+        subdomain,
+        authProvider: "google",
+        googleId,
+        isVerified: true,
+        password: null,
+      }
+    })
+
+    const token = generateToken(user.id, res)
+    return res.status(201).json({
+      status: "success",
+      data: { user: { id: user.id, email: user.email }, token }
+    })
+
+  } catch (err) {
+    err.status = 400
+    next(err)
+  }
+}
+
+// Login
+
+const googleLoginMerchant = async (req, res, next) => {
+  try {
+    const { idToken } = req.body
+
+    if (!idToken) {
+      return res.status(400).json({ error: "idToken is required" })
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+    const { email } = ticket.getPayload()
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, role: true, authProvider: true }
+    })
+
+    if (!user) {
+      return res.status(400).json({ error: "No account found with this email. Please sign up first." })
+    }
+
+    if (user.authProvider !== "google") {
+      return res.status(400).json({
+        error: "This email is registered with a password. Please log in with your email and password instead."
+      })
+    }
+
+    if (user.role !== "merchant") {
+      return res.status(401).json({ error: "access denied, merchant account required" })
+    }
+
+    const token = generateToken(user.id, res)
+    return res.status(200).json({
+      status: "success",
+      data: { user: { id: user.id, email: user.email }, token }
+    })
+
+  } catch (err) {
+    err.status = 400
+    next(err)
+  }
+}
+
+const googleLoginCustomer = async (req, res, next) => {
+  try {
+    const { idToken } = req.body
+
+    if (!idToken) {
+      return res.status(400).json({ error: "idToken is required" })
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+    const { email } = ticket.getPayload()
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, role: true, authProvider: true }
+    })
+
+    if (!user) {
+      return res.status(400).json({ error: "No account found with this email. Please sign up first." })
+    }
+
+    if (user.authProvider !== "google") {
+      return res.status(400).json({
+        error: "This email is registered with a password. Please log in with your email and password instead."
+      })
+    }
+
+    if (user.role !== "customer") {
+      return res.status(401).json({ error: "access denied, customer account required" })
+    }
+
+    const token = generateToken(user.id, res)
+    return res.status(200).json({
+      status: "success",
+      data: { user: { id: user.id, email: user.email }, token }
+    })
+
+  } catch (err) {
+    err.status = 400
+    next(err)
+  }
+}
+
+
 
 // logout user
 
@@ -504,4 +737,4 @@ const me = async (req, res, next) => {
 
 
 
-export {registerMerchant,register,loginMerchant,loginCustomer,logout,me,verifyEmail}
+export {registerMerchant,registerCustomer,loginMerchant,loginCustomer,logout,me,verifyEmail,googleRegisterMerchant, googleRegisterCustomer,googleLoginMerchant, googleLoginCustomer}
