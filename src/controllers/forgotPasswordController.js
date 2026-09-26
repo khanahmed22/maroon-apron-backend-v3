@@ -54,7 +54,7 @@ const merchantForgotPassWController = async (req, res,next) => {
     const verificationUrl = `${process.env.CRIMSON_ADMIN_URL}/reset-password/${token}`;
 
     await resend.emails.send({
-      from: "no-reply@maroonapron.com",
+      from: "team@maroonapron.com",
       to: user.email,
       subject: "Reset your password",
       html: `
@@ -179,7 +179,7 @@ const customerForgotPassWController = async (req, res,next) => {
     const verificationUrl = `http://${subdomain}.${process.env.CRIMSON_NEXT_URL}/reset-password/${token}`;
 
     await resend.emails.send({
-      from: "no-reply@maroonapron.com",
+      from: "team@maroonapron.com",
       to: user.email,
       subject: "Reset your password",
       html: `

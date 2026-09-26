@@ -76,7 +76,7 @@ const registerMerchant = async (req, res, next) => {
     const verificationUrl = `${process.env.CRIMSON_ADMIN_URL}/verify-email/${role}/${verifToken}`;
 
     await resend.emails.send({
-      from: "no-reply@maroonapron.com",
+      from: "team@maroonapron.com",
       to: user.email,
       subject: "Verify your email",
       html: ` <div style="margin:0; padding:40px 20px; background:#FBF7F6; font-family:Arial, Helvetica, sans-serif;"> <div style="max-width:560px; margin:0 auto;"> <div style="background:#D6293F; padding:28px 32px; border-radius:16px 16px 0 0; text-align:center;"> <div style="font-size:24px; font-weight:700; color:#FFFFFF; letter-spacing:-0.5px;"> Maroon Apron </div> </div> <div style="background:#FFFFFF; padding:40px 36px; border-radius:0 0 16px 16px; border:1px solid #E7E5E4; border-top:none;"> <h1 style="margin:0 0 16px; color:#171717; font-size:26px; line-height:1.3; font-weight:700;"> Welcome to Maroon Apron </h1> <p style="margin:0 0 28px; color:#6B7280; font-size:16px; line-height:1.6;"> You're almost ready to start running your food business online. Please verify your email address to activate your merchant account. </p> <div style="text-align:center; margin:32px 0;"> <a href="${verificationUrl}" style="display:inline-block; padding:14px 28px; background:#D6293F; color:#FFFFFF; text-decoration:none; font-size:15px; font-weight:700; border-radius:8px;" > Verify Email </a> </div> <p style="margin:28px 0 0; color:#6B7280; font-size:13px; line-height:1.6;"> If you didn't create a Maroon Apron account, you can safely ignore this email. </p> </div> <p style="margin:24px 0 0; text-align:center; color:#9CA3AF; font-size:12px;"> © Maroon Apron · Helping home chefs run their food business online </p> </div> </div> `,
@@ -158,7 +158,7 @@ const register = async (req, res, next) => {
     const verificationUrl = `https://${subdomain}.${process.env.CRIMSON_NEXT_URL}/verify-email/${role}/${verifToken}`;
 
     await resend.emails.send({
-    from: "no-reply@maroonapron.com",
+    from: "team@maroonapron.com",
     to: user.email,
     subject: "Verify your email",
     html: `

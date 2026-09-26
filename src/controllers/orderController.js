@@ -249,10 +249,7 @@ try {
 
       <hr style="margin:30px 0;">
 
-      <p style="font-size:14px;color:#666;">
-        If you have any questions about your order, simply reply to this email .
-      </p>
-
+      
       <p style="margin-top:30px;">
         Thank you for choosing <strong>${custDetails.restName}</strong> ❤️
       </p>
