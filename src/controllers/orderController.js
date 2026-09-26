@@ -175,7 +175,7 @@ try {
   )
   .join("");
   await resend.emails.send({
-  from: "orders@crimsoncastle.shop",
+  from: "orders@maroonapron.com",
   to: custDetails.custEmail,
   subject: `Order Confirmation #${custDetails.orderNumber}`,
   html: `
@@ -332,7 +332,7 @@ const updateOrder = async (req, res,next) => {
     // Send cancellation email
     if (status === "cancelled") {
       await resend.emails.send({
-        from: "orders@crimsoncastle.shop",
+        from: "orders@maroonapron.com",
         to: order.custEmail,
         subject: `Order #${order.orderNumber} Cancelled`,
         html: `
