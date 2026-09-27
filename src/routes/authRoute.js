@@ -10,13 +10,15 @@ const authRouter = Router({
    mergeParams:true
 })
 
+// local
+
 authRouter.post('/register-merchant', registerMerchant)
 
-authRouter.post('/register',registerCustomer)
+authRouter.post('/register-customer',registerCustomer)
 
 authRouter.post('/login-merchant', loginMerchant)
 
-authRouter.post('/login', loginCustomer)
+authRouter.post('/login-customer', loginCustomer)
 
 authRouter.post('/logout', logout)
 

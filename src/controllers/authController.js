@@ -346,6 +346,7 @@ const loginMerchant = async (req, res, next) => {
       password: true,
       isVerified: true,
       role: true,
+      authProvider:true
     },
     })
 
@@ -421,6 +422,7 @@ const loginCustomer = async (req, res, next) => {
       password: true,
       isVerified: true,
       role: true,
+      authProvider: true
     },
     })
 
