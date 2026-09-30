@@ -18,7 +18,7 @@ model User {
   role                  String
   subdomain             String?
   plan                  String               @default("free")
-
+  tourCompleted Boolean @default(false)
   // paddle
   paddleSubscription_id String?
   paddleCustomerId      String?

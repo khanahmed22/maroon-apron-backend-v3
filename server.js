@@ -30,7 +30,7 @@ import menuScanRouter from './src/routes/menuScanRoute.js'
 import firebaseNotif from './src/routes/firebaseRoute.js'
 import deleteAccountRouter from './src/routes/deleteAccountRoute.js'
 import revenueCatRouter from './src/routes/revenueCatRoute.js'
-
+import tourRouter from './src/routes/tourRoute.js'
 import "./src/jobs/cleanupPasswordResetTokens.js";
 import "./src/jobs/cleanupCouponCode.js"
 
@@ -111,6 +111,7 @@ app.use('/area-list',rateLimiter(100, 60),deliveryRouter)
 
 app.use('/analytics', rateLimiter(50, 60), analyticsRouter)
 app.use("/coupons", rateLimiter(80, 60),couponRouter);
+app.use("/tour", rateLimiter(30, 60),tourRouter);
 
 
 

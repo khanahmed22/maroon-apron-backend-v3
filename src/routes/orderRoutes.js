@@ -6,7 +6,7 @@ const orderRouter = Router()
 orderRouter.get('/:restId',viewOrder)
 
 
-orderRouter.post('/',addOrder)
+orderRouter.post('/',addOrder)  // for customer and guest
 
 orderRouter.put('/',protect,updateOrder)
 
