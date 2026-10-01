@@ -534,7 +534,10 @@ const googleRegisterMerchant = async (req, res, next) => {
       return newUser
     })
 
-     await resend.emails.send({
+    // Welcome email must never block sign-in: the account already exists,
+    // so a Resend failure shouldn't stop the cookie from being set.
+    try {
+      await resend.emails.send({
         from: "onboarding@maroonapron.com",
         to: user.email,
         subject: "Welcome to Maroon Apron",
@@ -584,10 +587,11 @@ const googleRegisterMerchant = async (req, res, next) => {
   <p style="margin-top:24px;">
     If you didn't create this account, you can safely ignore this email.
   </p>
-`
-
-
-      });
+`,
+      })
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError)
+    }
 
     const token = generateToken(user.id, res)
     return res.status(201).json({
