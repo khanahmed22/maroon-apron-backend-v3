@@ -8,7 +8,7 @@ export const uploadImageController = async (req, res,next) => {
         });
       }
 
-      const folder = req.body.folder || 'inventory'
+      const folder = req.body.folder || ''
       const result = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
