@@ -18,13 +18,13 @@ The backend API for **Maroon Apron**, powering both the **Admin Dashboard** and 
 
 The administration dashboard used to manage restaurants, menus, orders, inventory, and other business operations.
 
-[Maroon Apron Admin App](https://github.com/khanahmed22/crimson-admin-v3)
+[Maroon Apron Admin App](https://github.com/khanahmed22/maroon-apron-admin-v3)
 
 ### Client App
 
 The customer-facing application used to browse menus and place orders.
 
-[Maroon Apron Client App](https://github.com/khanahmed22/crimson-next-v3)
+[Maroon Apron Customer App](https://github.com/khanahmed22/maroon-apron-next-v3)
 
 
 ## Main Responsibilities
